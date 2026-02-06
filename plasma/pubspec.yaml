@@ -10,7 +10,13 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  
+  # 1. The Bridge
   flutter_inappwebview: ^6.0.0
+
+  # 2. Blockchain Interactions
+  web3dart: ^2.7.3
+  http: ^1.2.0
 
 dev_dependencies:
   flutter_test:

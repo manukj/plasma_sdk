@@ -3,20 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Plasma JS Environment</title>
+    <title>Plasma Bridge</title>
 </head>
 <body>
     <script>
-        // Simple function that returns a greeting
-        function getHelloWorld() {
-            return "Hello World from JS World";
-        }
+        console.log("🌉 Plasma Bridge: Initializing...");
 
-        // Make the function available globally
-        window.getHelloWorld = getHelloWorld;
+        // Global Bridge Object
+        window.bridge = {
+            /**
+             * Ping function to verify communication
+             * @returns {string} "pong"
+             */
+            ping: function() {
+                console.log("🏓 Bridge: ping() called from Dart");
+                return "pong";
+            }
+        };
 
-        // Log when the environment is ready
-        console.log("Plasma JS Environment initialized");
+        console.log("✅ Plasma Bridge: Loaded successfully");
+        console.log("📡 Bridge API available at window.bridge");
     </script>
 </body>
 </html>

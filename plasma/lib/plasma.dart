@@ -3,8 +3,10 @@ library;
 
 import 'package:flutter/foundation.dart';
 
+import 'src/bridge/bridge_module.dart';
 import 'src/wallet/wallet_module.dart';
 
+export 'src/bridge/bridge_module.dart';
 export 'src/wallet/wallet_module.dart';
 
 class Plasma {
@@ -14,6 +16,7 @@ class Plasma {
 
   // Public Modules
   late WalletModule wallet;
+  late BridgeModule bridge;
 
   // Configuration State
   bool _isInitialized = false;
@@ -42,6 +45,10 @@ class Plasma {
 
     // 3. Try to load saved wallet
     await wallet.load();
+
+    // 4. Initialize Bridge Module
+    bridge = BridgeModule();
+    await bridge.init();
 
     _isInitialized = true;
   }

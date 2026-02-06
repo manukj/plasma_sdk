@@ -21,11 +21,13 @@ class _MyAppState extends State<MyApp> {
   String _walletStatus = "Checking Wallet...";
   String _balance = "---";
   bool _isLoadingBalance = false;
+  String _bridgeStatus = "Testing...";
 
   @override
   void initState() {
     super.initState();
     _checkWallet();
+    _testBridge();
   }
 
   void _checkWallet() {
@@ -71,6 +73,21 @@ class _MyAppState extends State<MyApp> {
       setState(() {
         _balance = "Error: $e";
         _isLoadingBalance = false;
+      });
+    }
+  }
+
+  Future<void> _testBridge() async {
+    try {
+      final response = await Plasma.instance.bridge.ping();
+      setState(() {
+        _bridgeStatus = response == "pong"
+            ? "✅ Connected"
+            : "❌ Failed: $response";
+      });
+    } catch (e) {
+      setState(() {
+        _bridgeStatus = "❌ Error: $e";
       });
     }
   }
@@ -173,6 +190,37 @@ class _MyAppState extends State<MyApp> {
                           ),
                         ),
                       ],
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // Bridge Status Card
+              Card(
+                elevation: 2,
+                color: Colors.purple.shade50,
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.link, color: Colors.purple),
+                      const SizedBox(width: 8),
+                      const Text(
+                        'Bridge Status:',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(_bridgeStatus, style: const TextStyle(fontSize: 14)),
+                      const Spacer(),
+                      IconButton(
+                        onPressed: _testBridge,
+                        icon: const Icon(Icons.refresh, size: 18),
+                        tooltip: 'Test Bridge',
+                      ),
                     ],
                   ),
                 ),

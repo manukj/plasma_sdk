@@ -1,20 +1,26 @@
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 
 class BridgeModule {
   HeadlessInAppWebView? _headlessWebView;
+  InAppWebViewController? _controller;
   bool _isInitialized = false;
   bool get isInitialized => _isInitialized;
 
-  /// Initialize the headless WebView with the bridge HTML
+  /// Initialize the headless WebView with the bundled JavaScript
   Future<void> init() async {
     if (_isInitialized) return;
 
     debugPrint("🌉 BridgeModule: Initializing headless WebView...");
 
+    // Load the bundled JavaScript from assets
+    final bundleJs = await rootBundle.loadString('assets/www/bundle.js');
+
     _headlessWebView = HeadlessInAppWebView(
       initialData: InAppWebViewInitialData(
-        data: '''
+        data:
+            '''
 <!DOCTYPE html>
 <html>
 <head>
@@ -23,19 +29,9 @@ class BridgeModule {
     <title>Plasma Bridge</title>
 </head>
 <body>
+    <h1>Plasma Bridge (Offline Mode)</h1>
     <script>
-        console.log("🌉 Plasma Bridge: Initializing...");
-
-        // Global Bridge Object
-        window.bridge = {
-            ping: function() {
-                console.log("🏓 Bridge: ping() called from Dart");
-                return "pong";
-            }
-        };
-
-        console.log("✅ Plasma Bridge: Loaded successfully");
-        console.log("📡 Bridge API available at window.bridge");
+$bundleJs
     </script>
 </body>
 </html>
@@ -49,6 +45,7 @@ class BridgeModule {
         allowUniversalAccessFromFileURLs: true,
       ),
       onWebViewCreated: (controller) {
+        _controller = controller;
         debugPrint("🌉 BridgeModule: WebView created");
       },
       onLoadStart: (controller, url) {
@@ -70,24 +67,60 @@ class BridgeModule {
     await _headlessWebView?.run();
 
     // Wait a bit for the page to fully initialize
-    await Future.delayed(const Duration(milliseconds: 500));
+    await Future.delayed(const Duration(milliseconds: 1000));
 
     debugPrint("🌉 BridgeModule: Ready");
   }
 
   /// Ping the bridge to verify communication
   Future<String> ping() async {
-    if (!_isInitialized || _headlessWebView == null) {
+    if (!_isInitialized || _controller == null) {
       return "Error: Bridge not initialized";
     }
 
     try {
-      final result = await _headlessWebView!.webViewController
-          ?.evaluateJavascript(source: "window.bridge.ping()");
+      final result = await _controller!.evaluateJavascript(
+        source: "window.bridge.ping()",
+      );
 
       return result?.toString() ?? "No response";
     } catch (e) {
       debugPrint("❌ BridgeModule: Ping failed - $e");
+      return "Error: $e";
+    }
+  }
+
+  /// Send USDT transaction
+  Future<String> sendUSDT({
+    required String privateKey,
+    required String to,
+    required String amount,
+    required String tokenAddress,
+  }) async {
+    if (!_isInitialized || _controller == null) {
+      return "Error: Bridge not initialized";
+    }
+
+    try {
+      final result = await _controller!.callAsyncJavaScript(
+        functionBody: """
+        return await window.bridge.sendUSDT(
+            arguments[0], // privateKey
+            arguments[1], // to
+            arguments[2], // amount
+            arguments[3]  // tokenAddress
+        );
+        """,
+        arguments: {'0': privateKey, '1': to, '2': amount, '3': tokenAddress},
+      );
+
+      if (result == null || result.error != null) {
+        return "Error: ${result?.error ?? 'Unknown JS Error'}";
+      }
+
+      return result.value.toString();
+    } catch (e) {
+      debugPrint("❌ BridgeModule: sendUSDT failed - $e");
       return "Error: $e";
     }
   }
@@ -97,6 +130,7 @@ class BridgeModule {
     debugPrint("🌉 BridgeModule: Disposing...");
     await _headlessWebView?.dispose();
     _headlessWebView = null;
+    _controller = null;
     _isInitialized = false;
   }
 }

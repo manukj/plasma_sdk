@@ -1,7 +1,7 @@
 name: plasma
-description: "A new Flutter package project."
+description: "A Flutter package for seamless Flutter-to-JavaScript communication via headless WebView."
 version: 0.0.1
-homepage:
+homepage: https://github.com/yourusername/plasma
 
 environment:
   sdk: ^3.9.2

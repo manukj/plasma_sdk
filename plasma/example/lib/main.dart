@@ -13,8 +13,28 @@ void main() async {
   runApp(
     MaterialApp(
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: PlasmaTheme.primary,
+          brightness: Brightness.light,
+        ).copyWith(
+          primary: PlasmaTheme.primary,
+          secondary: PlasmaTheme.primary,
+          surface: Colors.white,
+        ),
+        scaffoldBackgroundColor: Colors.white,
+        appBarTheme: const AppBarTheme(
+          backgroundColor: Colors.white,
+          foregroundColor: PlasmaTheme.textPrimary,
+          surfaceTintColor: Colors.white,
+        ),
+        navigationBarTheme: NavigationBarThemeData(
+          backgroundColor: Colors.white,
+          indicatorColor: PlasmaTheme.primary.withValues(alpha: 0.14),
+          labelTextStyle: MaterialStateProperty.all(
+            const TextStyle(fontWeight: FontWeight.w600),
+          ),
+        ),
       ),
       home: const PlasmaExampleApp(),
     ),

@@ -36,6 +36,9 @@ class PlasmaGenUi extends StatelessWidget {
 
     showModalBottomSheet<void>(
       context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(8)),
+      ),
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) => BlocProvider<GenUiCubit>.value(

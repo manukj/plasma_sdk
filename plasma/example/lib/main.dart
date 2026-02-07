@@ -34,6 +34,7 @@ class _MyAppState extends State<MyApp> {
     setState(() {
       if (Plasma.instance.hasWallet) {
         _walletStatus = "Wallet Loaded";
+        _getBalance(); // Auto-load balance
       } else {
         _walletStatus = "No Wallet Found";
         _balance = "---";
@@ -152,7 +153,13 @@ class _MyAppState extends State<MyApp> {
                   ],
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 24),
+
+              // Plasma Wallet Card
+              if (hasWallet) ...[
+                const PlasmaWalletCard(),
+                const SizedBox(height: 24),
+              ],
 
               // Transaction Test Card
               Card(

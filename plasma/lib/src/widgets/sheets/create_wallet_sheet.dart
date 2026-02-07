@@ -52,7 +52,7 @@ class _CreateWalletSheetState extends State<_CreateWalletSheet> {
     setState(() => _state = _WalletSheetState.loading);
 
     try {
-      await Future.delayed(const Duration(seconds: 20));
+      await Future.delayed(const Duration(seconds: 1));
       await Plasma.instance.createWallet();
       _address = Plasma.instance.address;
 

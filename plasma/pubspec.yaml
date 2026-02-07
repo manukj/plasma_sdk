@@ -36,6 +36,8 @@ flutter:
   assets:
     - assets/www/
     - assets/images/logo.png
+    - assets/images/chip_icon.png
+    - assets/images/logo_light.png
   #
   # For details regarding assets in packages, see
   # https://flutter.dev/to/asset-from-package

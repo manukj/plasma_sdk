@@ -1,63 +1,121 @@
 /// Plasma SDK - A Flutter package for blockchain wallet management and network configuration.
 library;
 
-import 'package:flutter/foundation.dart';
+import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
+import 'package:web3dart/web3dart.dart' show EthPrivateKey;
+
+import 'src/api/plasma_api.dart';
 import 'src/bridge/bridge_module.dart';
+import 'src/config/network_config.dart';
 import 'src/wallet/wallet_module.dart';
 
 export 'package:web3dart/web3dart.dart'
     show Credentials, EthPrivateKey, EthereumAddress;
 
-export 'src/bridge/bridge_module.dart';
 export 'src/api/plasma_api.dart';
+export 'src/bridge/bridge_module.dart';
+export 'src/config/network_config.dart';
 export 'src/wallet/wallet_module.dart';
 
 class Plasma {
-  // Singleton Instance
   static final Plasma instance = Plasma._internal();
   Plasma._internal();
 
-  // ✅ VERIFIED CONTRACT ADDRESS (USDT0)
-  // Found on testnet.plasmascan.to/tokentxns
-  String usdtAddress = "0x246a94a471348881071bb475bf318b7119ab7e2d";
-
-  // Public Modules
   late WalletModule wallet;
   late BridgeModule bridge;
 
-  // Configuration State
   bool _isInitialized = false;
-  bool get isTestnet => _isTestnet;
-  late bool _isTestnet;
-  late String rpcUrl;
+  late Network _network;
+  late NetworkConfig _config;
 
-  /// Initialize the SDK
-  /// [isTestnet]: true = Plasma Testnet, false = Plasma Mainnet
-  Future<void> init({bool isTestnet = false}) async {
+  Network get network => _network;
+  NetworkConfig get config => _config;
+
+  String get rpcUrl => _config.rpcUrl;
+  String get usdtAddress => _config.usdtAddress;
+  String get relayerUrl => _config.relayerUrl;
+  int get chainId => _config.chainId;
+
+  @Deprecated('Use network == Network.testnet instead')
+  bool get isTestnet => _network == Network.testnet;
+
+  Future<void> init({Network network = Network.testnet}) async {
     if (_isInitialized) return;
 
-    _isTestnet = isTestnet;
+    _network = network;
+    _config = NetworkConfig.getConfig(network);
 
-    // 1. Network Configuration
-    if (isTestnet) {
-      rpcUrl = "https://testnet-rpc.plasma.to";
-      debugPrint("🔧 Plasma SDK: Testnet Mode");
-    } else {
-      rpcUrl = "https://rpc.plasma.to";
-      debugPrint("🚀 Plasma SDK: Mainnet Mode");
-    }
+    debugPrint("🔧 Plasma SDK: ${_config.name}");
+    debugPrint("   RPC: ${_config.rpcUrl}");
+    debugPrint("   Chain ID: ${_config.chainId}");
 
-    // 2. Initialize Wallet with the correct RPC
-    wallet = WalletModule(rpcUrl);
-
-    // 3. Try to load saved wallet
+    wallet = WalletModule(_config.rpcUrl);
     await wallet.load();
 
-    // 4. Initialize Bridge Module
     bridge = BridgeModule();
     await bridge.init();
 
     _isInitialized = true;
+  }
+
+  bool get hasWallet => wallet.isLoaded;
+  String? get address => wallet.address;
+
+  Future<void> createWallet() async {
+    await wallet.create();
+  }
+
+  Future<void> deleteWallet() async {
+    await wallet.clear();
+  }
+
+  Future<String> getBalance() async {
+    if (!wallet.isLoaded) {
+      throw StateError('No wallet loaded. Call createWallet() first.');
+    }
+    return await wallet.getNativeBalance();
+  }
+
+  Future<String> send({
+    required String to,
+    required String amount,
+    String? tokenAddress,
+  }) async {
+    if (!wallet.isLoaded) {
+      throw StateError('No wallet loaded. Call createWallet() first.');
+    }
+
+    final credentials = wallet.credentials;
+    if (credentials is! EthPrivateKey) {
+      throw StateError('Invalid wallet credentials');
+    }
+
+    final privateKey =
+        '0x${credentials.privateKeyInt.toRadixString(16).padLeft(64, '0')}';
+    final from = wallet.address!;
+    final token = tokenAddress ?? usdtAddress;
+
+    final signature = await bridge.signGaslessTransfer(
+      privateKey: privateKey,
+      from: from,
+      to: to,
+      amount: amount,
+      tokenAddress: token,
+    );
+
+    if (signature == null || signature.startsWith('ERROR:')) {
+      throw Exception('Failed to sign transaction: $signature');
+    }
+
+    final signedData = jsonDecode(signature) as Map<String, dynamic>;
+    final result = await PlasmaApi.submitGaslessTransfer(signedData);
+
+    return result;
+  }
+
+  Future<String> sendUSDT({required String to, required String amount}) async {
+    return await send(to: to, amount: amount, tokenAddress: usdtAddress);
   }
 }

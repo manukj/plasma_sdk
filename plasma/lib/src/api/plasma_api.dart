@@ -1,16 +1,19 @@
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
+import 'package:plasma/plasma.dart';
 
 class PlasmaApi {
-  static const String _baseUrl = "https://api.relayer.plasma.to";
   static const String _apiKey = "YOUR_PLASMA_API_KEY";
 
   /// Sends the EIP-3009 signature payload to the Plasma relayer API.
+  /// Uses the relayer URL from the current network configuration.
   static Future<String> submitGaslessTransfer(
     Map<String, dynamic> signedData,
   ) async {
-    final url = Uri.parse("$_baseUrl/v1/submit");
+    // Get relayer URL from current network config
+    final baseUrl = Plasma.instance.relayerUrl;
+    final url = Uri.parse("$baseUrl/v1/submit");
 
     try {
       final response = await http.post(

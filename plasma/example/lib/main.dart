@@ -1,13 +1,11 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:plasma/plasma.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Initialize on Testnet
-  await Plasma.instance.init(isTestnet: true);
+  // Initialize on Testnet (default network)
+  await Plasma.instance.init(network: Network.testnet);
 
   runApp(const MyApp());
 }
@@ -36,7 +34,7 @@ class _MyAppState extends State<MyApp> {
 
   void _checkWallet() {
     setState(() {
-      if (Plasma.instance.wallet.isLoaded) {
+      if (Plasma.instance.hasWallet) {
         _walletStatus = "Wallet Loaded";
       } else {
         _walletStatus = "No Wallet Found";
@@ -46,17 +44,17 @@ class _MyAppState extends State<MyApp> {
   }
 
   Future<void> _create() async {
-    await Plasma.instance.wallet.create();
+    await Plasma.instance.createWallet();
     _checkWallet();
   }
 
   Future<void> _clear() async {
-    await Plasma.instance.wallet.clear();
+    await Plasma.instance.deleteWallet();
     _checkWallet();
   }
 
   Future<void> _getBalance() async {
-    if (!Plasma.instance.wallet.isLoaded) {
+    if (!Plasma.instance.hasWallet) {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text('Create a wallet first!')));
@@ -68,7 +66,7 @@ class _MyAppState extends State<MyApp> {
     });
 
     try {
-      final balance = await Plasma.instance.wallet.getNativeBalance();
+      final balance = await Plasma.instance.getBalance();
       setState(() {
         _balance = balance;
         _isLoadingBalance = false;
@@ -97,45 +95,18 @@ class _MyAppState extends State<MyApp> {
   }
 
   Future<void> _sendGasless() async {
-    if (!Plasma.instance.wallet.isLoaded) return;
+    if (!Plasma.instance.hasWallet) return;
 
     setState(() {
       _isSending = true;
-      _txStatus = "⏳ Signing...";
+      _txStatus = "⏳ Sending...";
     });
 
     try {
-      final credentials = Plasma.instance.wallet.credentials;
-      if (credentials is! EthPrivateKey) {
-        throw "Invalid credentials type";
-      }
-
-      final privateKey =
-          '0x${credentials.privateKeyInt.toRadixString(16).padLeft(64, '0')}';
-      final myAddress = Plasma.instance.wallet.address!;
-
-      final jsonString = await Plasma.instance.bridge.signGaslessTransfer(
-        privateKey: privateKey,
-        from: myAddress,
+      final result = await Plasma.instance.send(
         to: "0x000000000000000000000000000000000000dEaD",
         amount: "1.0",
-        tokenAddress: Plasma.instance.usdtAddress,
       );
-
-      if (jsonString == null || jsonString.startsWith("ERROR:")) {
-        setState(() {
-          _txStatus = "❌ Signing Failed:\n${jsonString ?? 'No response'}";
-          _isSending = false;
-        });
-        return;
-      }
-
-      setState(() {
-        _txStatus = "⏳ Relaying...";
-      });
-
-      final signedData = jsonDecode(jsonString) as Map<String, dynamic>;
-      final result = await PlasmaApi.submitGaslessTransfer(signedData);
 
       setState(() {
         _txStatus = result;
@@ -143,7 +114,7 @@ class _MyAppState extends State<MyApp> {
       });
     } catch (e) {
       setState(() {
-        _txStatus = "❌ Exception: $e";
+        _txStatus = "❌ Error: $e";
         _isSending = false;
       });
     }
@@ -151,8 +122,8 @@ class _MyAppState extends State<MyApp> {
 
   @override
   Widget build(BuildContext context) {
-    final wallet = Plasma.instance.wallet;
-    final network = Plasma.instance.isTestnet ? "Testnet" : "Mainnet";
+    final hasWallet = Plasma.instance.hasWallet;
+    final network = Plasma.instance.config.name;
 
     return MaterialApp(
       theme: ThemeData(
@@ -176,7 +147,7 @@ class _MyAppState extends State<MyApp> {
                   vertical: 6,
                 ),
                 decoration: BoxDecoration(
-                  color: Plasma.instance.isTestnet
+                  color: Plasma.instance.network == Network.testnet
                       ? Colors.orange.shade100
                       : Colors.green.shade100,
                   borderRadius: BorderRadius.circular(20),
@@ -187,7 +158,7 @@ class _MyAppState extends State<MyApp> {
                     Icon(
                       Icons.circle,
                       size: 8,
-                      color: Plasma.instance.isTestnet
+                      color: Plasma.instance.network == Network.testnet
                           ? Colors.orange
                           : Colors.green,
                     ),
@@ -196,7 +167,7 @@ class _MyAppState extends State<MyApp> {
                       network,
                       style: TextStyle(
                         fontWeight: FontWeight.w600,
-                        color: Plasma.instance.isTestnet
+                        color: Plasma.instance.network == Network.testnet
                             ? Colors.orange.shade900
                             : Colors.green.shade900,
                       ),
@@ -229,7 +200,7 @@ class _MyAppState extends State<MyApp> {
                         ],
                       ),
                       const SizedBox(height: 12),
-                      if (wallet.isLoaded) ...[
+                      if (hasWallet) ...[
                         Text(
                           _txStatus,
                           style: TextStyle(
@@ -285,10 +256,10 @@ class _MyAppState extends State<MyApp> {
                       Row(
                         children: [
                           Icon(
-                            wallet.isLoaded
+                            hasWallet
                                 ? Icons.account_balance_wallet
                                 : Icons.warning_amber,
-                            color: wallet.isLoaded ? Colors.green : Colors.grey,
+                            color: hasWallet ? Colors.green : Colors.grey,
                           ),
                           const SizedBox(width: 8),
                           Text(
@@ -300,7 +271,7 @@ class _MyAppState extends State<MyApp> {
                           ),
                         ],
                       ),
-                      if (wallet.isLoaded) ...[
+                      if (hasWallet) ...[
                         const SizedBox(height: 16),
                         const Text(
                           'Address:',
@@ -308,7 +279,7 @@ class _MyAppState extends State<MyApp> {
                         ),
                         const SizedBox(height: 4),
                         SelectableText(
-                          wallet.address ?? '',
+                          Plasma.instance.address ?? '',
                           style: const TextStyle(
                             fontFamily: 'monospace',
                             fontSize: 12,
@@ -353,7 +324,7 @@ class _MyAppState extends State<MyApp> {
               const SizedBox(height: 24),
 
               // USDT Balance Card
-              if (wallet.isLoaded) ...[
+              if (hasWallet) ...[
                 Card(
                   elevation: 2,
                   color: Colors.blue.shade50,
@@ -394,7 +365,7 @@ class _MyAppState extends State<MyApp> {
               ],
 
               // Action Buttons
-              if (!wallet.isLoaded) ...[
+              if (!hasWallet) ...[
                 ElevatedButton.icon(
                   onPressed: _create,
                   icon: const Icon(Icons.add),

@@ -4,8 +4,14 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart';
 import 'package:web3dart/web3dart.dart';
 
+import '../data/token_transactions_remote_data_source.dart';
+import '../models/plasma_token_transactions_response.dart';
+import '../repositories/token_transactions_repository.dart';
+import '../repositories/token_transactions_repository_impl.dart';
+
 class WalletModule {
   late Web3Client _client;
+  late TokenTransactionsRepository _tokenTransactionsRepository;
   final _storage = const FlutterSecureStorage();
   final String _storageKey = 'plasma_private_key';
 
@@ -14,8 +20,22 @@ class WalletModule {
   EthereumAddress? _address;
 
   // Constructor
-  WalletModule(String rpcUrl) {
+  WalletModule(
+    String rpcUrl, {
+    required String etherscanApiBaseUrl,
+    required String etherscanApiKey,
+    required String usdt0Address,
+    required int chainId,
+  }) {
     _client = Web3Client(rpcUrl, Client());
+    _tokenTransactionsRepository = TokenTransactionsRepositoryImpl(
+      TokenTransactionsRemoteDataSource(
+        apiBaseUrl: etherscanApiBaseUrl,
+        apiKey: etherscanApiKey,
+        contractAddress: usdt0Address,
+        chainId: chainId,
+      ),
+    );
   }
 
   // --- GETTERS ---
@@ -91,5 +111,19 @@ class WalletModule {
       // Error reading balance, return 0
       return "0.0000";
     }
+  }
+
+  /// 5. Get USDT0 token transactions for current wallet address
+  Future<PlasmaTokenTransactionsResponse> getTokenTransactions({
+    int number = 10,
+  }) async {
+    if (_address == null) {
+      throw StateError('No wallet available');
+    }
+
+    return _tokenTransactionsRepository.getAddressTransactions(
+      address: _address!.hex,
+      number: number,
+    );
   }
 }

@@ -53,7 +53,7 @@ class PaymentService {
       from: from,
       to: to,
       amount: amount,
-      tokenAddress: _networkConfig.usdtAddress,
+      tokenAddress: _networkConfig.usdt0Address,
     );
 
     if (signedTx == null) {

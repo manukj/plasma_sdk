@@ -3,4 +3,4 @@
 export 'common/plasma_transcation_history.dart';
 export 'common/plasma_wallet_card.dart';
 export 'sheets/create_wallet_sheet.dart';
-export 'views/send_usdt_view.dart';
+export 'views/payment_view.dart';

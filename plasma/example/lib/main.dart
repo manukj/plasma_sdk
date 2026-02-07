@@ -277,7 +277,7 @@ class _MyAppState extends State<MyApp> {
                                                   BorderRadius.circular(2),
                                             ),
                                           ),
-                                          const PlasmaSendUSDTView(),
+                                          const PaymentView(),
                                         ],
                                       ),
                                     ),

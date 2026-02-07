@@ -36,14 +36,66 @@ class MockContentGenerator implements ContentGenerator {
     _isProcessing.value = true;
 
     String userInput = '';
+    String userInputRaw = '';
     if (message is UserUiInteractionMessage) {
-      userInput = message.text.toLowerCase();
+      userInputRaw = message.text;
+      userInput = userInputRaw.toLowerCase();
     }
 
     await Future.delayed(const Duration(seconds: 1));
 
     try {
-      if (_isTransactionIntent(userInput)) {
+      if (_isPaymentIntent(userInput)) {
+        final toAddress = _extractPaymentToAddress(userInputRaw);
+        final amount = _extractPaymentAmount(userInputRaw);
+
+        final summary = StringBuffer('Opening payment view');
+        if (amount != null && toAddress != null) {
+          summary.write(' for $amount USDT to $toAddress.');
+        } else if (amount != null) {
+          summary.write(' with amount $amount USDT.');
+        } else if (toAddress != null) {
+          summary.write(' for recipient $toAddress.');
+        } else {
+          summary.write('.');
+        }
+        _textController.add(summary.toString());
+
+        await Future.delayed(const Duration(milliseconds: 200));
+
+        const surfaceId = 'payment_surface';
+        const rootComponentId = 'payment_view';
+        final paymentProps = <String, Object?>{};
+        if (toAddress != null) paymentProps['toAddress'] = toAddress;
+        if (amount != null) paymentProps['amount'] = amount;
+
+        final surfaceUpdate = SurfaceUpdate(
+          surfaceId: surfaceId,
+          components: [
+            Component(
+              id: rootComponentId,
+              componentProperties: {
+                'PaymentView': paymentProps,
+              },
+            ),
+          ],
+        );
+
+        debugPrint(
+          '🎨 MockContentGenerator: Sending SurfaceUpdate - ${surfaceUpdate.surfaceId}',
+        );
+        _a2uiController.add(surfaceUpdate);
+
+        final beginRendering = const BeginRendering(
+          surfaceId: surfaceId,
+          root: rootComponentId,
+          catalogId: plasmaCatalogId,
+        );
+        debugPrint(
+          '🎨 MockContentGenerator: Sending BeginRendering - ${beginRendering.surfaceId}',
+        );
+        _a2uiController.add(beginRendering);
+      } else if (_isTransactionIntent(userInput)) {
         final number = _extractTransactionCount(userInput);
         _textController.add('Showing your last $number transactions.');
 
@@ -116,7 +168,7 @@ class MockContentGenerator implements ContentGenerator {
         _a2uiController.add(beginRendering);
       } else {
         _textController.add(
-          'I can show your wallet or transaction history. Try "What\'s my balance?" or "Show me last 4 transactions."',
+          'I can show wallet, transaction history, or payment view. Try "What\'s my balance?", "Show me last 4 transactions", or "Send 1 USDT to 0x...".',
         );
       }
     } catch (e, stackTrace) {
@@ -147,6 +199,60 @@ class MockContentGenerator implements ContentGenerator {
         input.contains('transcations') ||
         input.contains('history') ||
         input.contains('last');
+  }
+
+  bool _isPaymentIntent(String input) {
+    final hasAction = input.contains('send') ||
+        input.contains('pay') ||
+        input.contains('payment') ||
+        input.contains('transfer');
+    if (!hasAction) return false;
+
+    return input.contains('usdt') ||
+        input.contains('usd') ||
+        input.contains('to ');
+  }
+
+  String? _extractPaymentAmount(String input) {
+    final amountWithToken = RegExp(
+      r'\b(\d+(?:\.\d+)?)\s*(?:usdt0?|usdt|usd)\b',
+      caseSensitive: false,
+    ).firstMatch(input);
+    if (amountWithToken != null) {
+      return amountWithToken.group(1);
+    }
+
+    final firstNumber = RegExp(r'\b(\d+(?:\.\d+)?)\b').firstMatch(input);
+    return firstNumber?.group(1);
+  }
+
+  String? _extractPaymentToAddress(String input) {
+    final hexAddress = RegExp(
+      r'\b0x[a-fA-F0-9]{40}\b',
+    ).firstMatch(input);
+    if (hexAddress != null) {
+      return hexAddress.group(0);
+    }
+
+    final quotedTarget = RegExp(
+      r'''\bto\s+["“']([^"”']+)["”']''',
+      caseSensitive: false,
+    ).firstMatch(input);
+    if (quotedTarget != null) {
+      final value = quotedTarget.group(1)?.trim();
+      if (value != null && value.isNotEmpty) return value;
+    }
+
+    final genericTarget = RegExp(
+      r'\bto\s+([^\n,.;!?]+)',
+      caseSensitive: false,
+    ).firstMatch(input);
+    if (genericTarget != null) {
+      final value = genericTarget.group(1)?.trim();
+      if (value != null && value.isNotEmpty) return value;
+    }
+
+    return null;
   }
 
   int _extractTransactionCount(String input) {

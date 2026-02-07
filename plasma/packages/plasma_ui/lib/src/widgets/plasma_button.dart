@@ -45,10 +45,6 @@ class PlasmaButton extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  if (icon != null) ...[
-                    Icon(icon, size: PlasmaTheme.iconMd),
-                    const SizedBox(width: PlasmaTheme.spacingMd),
-                  ],
                   Text(
                     text,
                     style: const TextStyle(
@@ -56,8 +52,10 @@ class PlasmaButton extends StatelessWidget {
                       fontWeight: FontWeight.w600,
                     ),
                   ),
-                  const SizedBox(width: PlasmaTheme.spacingSm),
-                  const Icon(Icons.arrow_forward, size: PlasmaTheme.iconMd),
+                  if (icon != null) ...[
+                    const SizedBox(width: PlasmaTheme.spacingMd),
+                    Icon(icon, size: PlasmaTheme.iconMd),
+                  ],
                 ],
               ),
       ),

@@ -43,7 +43,43 @@ class MockContentGenerator implements ContentGenerator {
     await Future.delayed(const Duration(seconds: 1));
 
     try {
-      if (userInput.contains('balance') ||
+      if (_isTransactionIntent(userInput)) {
+        final number = _extractTransactionCount(userInput);
+        _textController.add('Showing your last $number transactions.');
+
+        await Future.delayed(const Duration(milliseconds: 200));
+
+        const surfaceId = 'transaction_history_surface';
+        const rootComponentId = 'transaction_history';
+        final surfaceUpdate = SurfaceUpdate(
+          surfaceId: surfaceId,
+          components: [
+            Component(
+              id: rootComponentId,
+              componentProperties: {
+                'PlasmaTranscationHistory': <String, Object?>{
+                  'number': number,
+                },
+              },
+            ),
+          ],
+        );
+
+        debugPrint(
+          '🎨 MockContentGenerator: Sending SurfaceUpdate - ${surfaceUpdate.surfaceId}',
+        );
+        _a2uiController.add(surfaceUpdate);
+
+        final beginRendering = const BeginRendering(
+          surfaceId: surfaceId,
+          root: rootComponentId,
+          catalogId: plasmaCatalogId,
+        );
+        debugPrint(
+          '🎨 MockContentGenerator: Sending BeginRendering - ${beginRendering.surfaceId}',
+        );
+        _a2uiController.add(beginRendering);
+      } else if (userInput.contains('balance') ||
           userInput.contains('how much') ||
           userInput.contains('funds') ||
           userInput.contains('wallet')) {
@@ -80,7 +116,7 @@ class MockContentGenerator implements ContentGenerator {
         _a2uiController.add(beginRendering);
       } else {
         _textController.add(
-          'I can help you check your balance. Try asking "What\'s my balance?"',
+          'I can show your wallet or transaction history. Try "What\'s my balance?" or "Show me last 4 transactions."',
         );
       }
     } catch (e, stackTrace) {
@@ -96,11 +132,31 @@ class MockContentGenerator implements ContentGenerator {
 
   @override
   void dispose() {
-    if (_disposed) return; 
+    if (_disposed) return;
     _disposed = true;
     _a2uiController.close();
     _textController.close();
     _errorController.close();
     _isProcessing.dispose();
+  }
+
+  bool _isTransactionIntent(String input) {
+    return input.contains('transaction') ||
+        input.contains('transactions') ||
+        input.contains('transcation') ||
+        input.contains('transcations') ||
+        input.contains('history') ||
+        input.contains('last');
+  }
+
+  int _extractTransactionCount(String input) {
+    final match = RegExp(r'\d+').firstMatch(input);
+    if (match == null) return 10;
+
+    final parsed = int.tryParse(match.group(0)!);
+    if (parsed == null) return 10;
+    if (parsed <= 0) return 10;
+    if (parsed > 50) return 50;
+    return parsed;
   }
 }

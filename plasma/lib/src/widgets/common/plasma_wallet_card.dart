@@ -11,7 +11,8 @@ class PlasmaWalletCard extends StatefulWidget {
 }
 
 class _PlasmaWalletCardState extends State<PlasmaWalletCard> {
-  String _balance = '---';
+  String _stableBalance = '---';
+  String _gasBalance = '---';
   bool _isLoading = false;
 
   @override
@@ -28,17 +29,22 @@ class _PlasmaWalletCardState extends State<PlasmaWalletCard> {
     setState(() => _isLoading = true);
 
     try {
-      final balance = await Plasma.instance.getBalance();
+      final balances = await Future.wait<String>([
+        Plasma.instance.getStableTokenBalance(),
+        Plasma.instance.getGasTokenBalance(),
+      ]);
       if (mounted) {
         setState(() {
-          _balance = balance;
+          _stableBalance = balances[0];
+          _gasBalance = balances[1];
           _isLoading = false;
         });
       }
     } catch (e) {
       if (mounted) {
         setState(() {
-          _balance = 'Error';
+          _stableBalance = 'Error';
+          _gasBalance = 'Error';
           _isLoading = false;
         });
       }
@@ -121,24 +127,14 @@ class _PlasmaWalletCardState extends State<PlasmaWalletCard> {
             const SizedBox(height: PlasmaTheme.spacingLg),
 
             // Balance section
-            const Text(
-              'USDT BALANCE',
-              style: TextStyle(
-                color: Colors.white70,
-                fontSize: 11,
-                fontWeight: FontWeight.w500,
-                letterSpacing: 1.2,
-              ),
-            ),
-            const SizedBox(height: PlasmaTheme.spacingXs),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              crossAxisAlignment: CrossAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Expanded(
                   child: _isLoading
                       ? const SizedBox(
-                          height: 28,
+                          height: 52,
                           child: Center(
                             widthFactor: 1,
                             child: SizedBox(
@@ -151,26 +147,43 @@ class _PlasmaWalletCardState extends State<PlasmaWalletCard> {
                             ),
                           ),
                         )
-                      : Text(
-                          _balance,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 28,
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: -0.5,
-                          ),
+                      : Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              '$_stableBalance USDT',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 28,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: -0.5,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              '$_gasBalance XPL',
+                              style: const TextStyle(
+                                color: Colors.white70,
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
                         ),
                 ),
-                IconButton(
-                  onPressed: _isLoading ? null : _loadBalance,
-                  icon: Icon(
-                    Icons.refresh,
-                    color: _isLoading ? Colors.white38 : Colors.white,
-                    size: 20,
+                Padding(
+                  padding: const EdgeInsets.only(top: 4),
+                  child: IconButton(
+                    onPressed: _isLoading ? null : _loadBalance,
+                    icon: Icon(
+                      Icons.refresh,
+                      color: _isLoading ? Colors.white38 : Colors.white,
+                      size: 20,
+                    ),
+                    tooltip: 'Refresh balance',
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
                   ),
-                  tooltip: 'Refresh balance',
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(),
                 ),
               ],
             ),

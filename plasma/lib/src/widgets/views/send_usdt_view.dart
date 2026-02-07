@@ -169,7 +169,7 @@ class _PlasmaSendUSDTViewState extends State<PlasmaSendUSDTView> {
                       borderRadius: BorderRadius.circular(PlasmaTheme.radiusSm),
                     ),
                     child: const Text(
-                      'USDT',
+                      'XPL',
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
@@ -268,7 +268,7 @@ class _PlasmaSendUSDTViewState extends State<PlasmaSendUSDTView> {
     return const Padding(
       padding: EdgeInsets.symmetric(vertical: PlasmaTheme.spacing3xl),
       child: PlasmaLoadingWidget(
-        message: 'Sending USDT...',
+        message: 'Sending XPL...',
         subtitle: 'PROCESSING TRANSACTION',
       ),
     );

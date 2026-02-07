@@ -43,7 +43,7 @@ class _MyAppState extends State<MyApp> {
     setState(() {
       if (Plasma.instance.hasWallet) {
         _walletStatus = "Wallet Loaded";
-        _getBalance(); // Auto-load balance
+        _getGasTokenBalance(); // Auto-load balance
       } else {
         _walletStatus = "No Wallet Found";
         _balance = "---";
@@ -97,7 +97,7 @@ class _MyAppState extends State<MyApp> {
     }
   }
 
-  Future<void> _getBalance() async {
+  Future<void> _getGasTokenBalance() async {
     if (!Plasma.instance.hasWallet) {
       ScaffoldMessenger.of(
         context,
@@ -110,7 +110,7 @@ class _MyAppState extends State<MyApp> {
     });
 
     try {
-      final balance = await Plasma.instance.getBalance();
+      final balance = await Plasma.instance.getGasTokenBalance();
       setState(() {
         _balance = balance;
         _isLoadingBalance = false;
@@ -292,7 +292,7 @@ class _MyAppState extends State<MyApp> {
                                 ),
                               ),
                               icon: const Icon(Icons.send),
-                              label: const Text('Send USDT'),
+                              label: const Text('Send XPL'),
                             ),
                           ),
                         ] else
@@ -419,7 +419,7 @@ class _MyAppState extends State<MyApp> {
                               IconButton(
                                 onPressed: _isLoadingBalance
                                     ? null
-                                    : _getBalance,
+                                    : _getGasTokenBalance,
                                 icon: const Icon(Icons.refresh),
                                 tooltip: 'Refresh Balance',
                               ),
@@ -446,7 +446,7 @@ class _MyAppState extends State<MyApp> {
                   ),
                 ] else ...[
                   ElevatedButton.icon(
-                    onPressed: _isLoadingBalance ? null : _getBalance,
+                    onPressed: _isLoadingBalance ? null : _getGasTokenBalance,
                     icon: _isLoadingBalance
                         ? const SizedBox(
                             width: 16,

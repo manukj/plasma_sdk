@@ -87,9 +87,16 @@ class Plasma {
     await _walletCubit.createWallet();
   }
 
-  Future<String> getBalance() async {
-    await _paymentCubit.loadBalance();
-    return _paymentCubit.balance;
+  Future<String> getGasTokenBalance() async {
+    _ensureInitialized();
+    _ensureWalletLoaded();
+    return _paymentService.getGasTokenBalance();
+  }
+
+  Future<String> getStableTokenBalance() async {
+    _ensureInitialized();
+    _ensureWalletLoaded();
+    return _paymentService.getStableTokenBalance();
   }
 
   Future<PlasmaTokenTransactionsResponse> getTokenTransactions([

@@ -15,7 +15,7 @@ class PaymentCubit extends Cubit<PaymentState> {
     emit(const PaymentLoading());
 
     try {
-      final balance = await _paymentService.getBalance();
+      final balance = await _paymentService.getGasTokenBalance();
       emit(PaymentIdle(balance: balance));
       debugPrint('✅ PaymentCubit: Balance loaded: $balance');
     } catch (e) {
@@ -36,12 +36,12 @@ class PaymentCubit extends Cubit<PaymentState> {
       final txHash = await _paymentService.sendUSDT(to: to, amount: amount);
 
       // Reload balance after sending
-      final balance = await _paymentService.getBalance();
+      final balance = await _paymentService.getGasTokenBalance();
 
       emit(PaymentSuccess(txHash: txHash, balance: balance));
       debugPrint('✅ PaymentCubit: Transaction successful: $txHash');
     } catch (e) {
-      final errorMessage = 'Failed to send USDT: $e';
+      final errorMessage = 'Failed to send XPL: $e';
       final currentBalance = await _safeGetBalance();
       emit(PaymentError(message: errorMessage, balance: currentBalance));
       debugPrint('❌ PaymentCubit: $errorMessage');
@@ -51,7 +51,7 @@ class PaymentCubit extends Cubit<PaymentState> {
   /// Get balance safely without changing state
   Future<String> _safeGetBalance() async {
     try {
-      return await _paymentService.getBalance();
+      return await _paymentService.getGasTokenBalance();
     } catch (e) {
       return '0';
     }

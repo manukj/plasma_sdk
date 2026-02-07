@@ -17,15 +17,22 @@ class PaymentService {
         _walletModule = walletModule,
         _networkConfig = networkConfig;
 
-  /// Get USDT balance
-  Future<String> getBalance() async {
+  /// Get native gas token balance (XPL)
+  Future<String> getGasTokenBalance() async {
     if (!_walletModule.isLoaded) {
       throw StateError('No wallet available');
     }
 
-    // For now, return native balance as USDT balance is similar flow
-    // TODO: Implement actual USDT balance query via bridge
-    return await _walletModule.getNativeBalance();
+    return await _walletModule.getGasTokenBalance();
+  }
+
+  /// Get stable token balance (USDT0)
+  Future<String> getStableTokenBalance() async {
+    if (!_walletModule.isLoaded) {
+      throw StateError('No wallet available');
+    }
+
+    return await _walletModule.getStableTokenBalance();
   }
 
   /// Send USDT to an address

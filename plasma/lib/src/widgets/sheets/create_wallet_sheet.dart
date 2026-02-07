@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:plasma/plasma.dart';
+
+import '../../../plasma.dart';
 
 enum _WalletSheetState { initial, loading, success }
 

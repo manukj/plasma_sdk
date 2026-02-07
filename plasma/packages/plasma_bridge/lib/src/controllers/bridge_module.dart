@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 
 import 'bridge_controller.dart';
-import 'utils/crypto_utils.dart';
+import '../utils/crypto_utils.dart';
 
 class BridgeModule {
   final BridgeController _controller = BridgeController();

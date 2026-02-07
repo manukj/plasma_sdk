@@ -10,7 +10,7 @@ packages:
     source: hosted
     version: "2.13.0"
   bloc:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: bloc
       sha256: "106842ad6569f0b60297619e9e0b1885c2fb9bf84812935490e6c5275777804e"
@@ -65,14 +65,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.0.7"
-  cupertino_icons:
-    dependency: "direct main"
-    description:
-      name: cupertino_icons
-      sha256: ba631d1c7f7bef6b729a622b7b752645a2d076dba9976925b8f25725a30e1ee6
-      url: "https://pub.dev"
-    source: hosted
-    version: "1.0.8"
   eip1559:
     dependency: transitive
     description:
@@ -90,7 +82,7 @@ packages:
     source: hosted
     version: "1.0.2"
   equatable:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: equatable
       sha256: "3e0141505477fd8ad55d6eb4e7776d3fe8430be8e497ccb1521370c3f21a3e2b"
@@ -127,7 +119,7 @@ packages:
     source: sdk
     version: "0.0.0"
   flutter_bloc:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: flutter_bloc
       sha256: b594505eac31a0518bdcb4b5b79573b8d9117b193cc80cc12e17d639b10aa27a
@@ -416,45 +408,31 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.3.0"
-  plasma:
+  plasma_bridge:
     dependency: "direct main"
     description:
-      path: ".."
-      relative: true
-    source: path
-    version: "0.0.1"
-  plasma_bridge:
-    dependency: transitive
-    description:
-      path: "../packages/plasma_bridge"
+      path: "../plasma_bridge"
       relative: true
     source: path
     version: "0.1.0"
   plasma_core:
-    dependency: transitive
+    dependency: "direct main"
     description:
-      path: "../packages/plasma_core"
-      relative: true
-    source: path
-    version: "0.1.0"
-  plasma_payment:
-    dependency: transitive
-    description:
-      path: "../packages/plasma_payment"
+      path: "../plasma_core"
       relative: true
     source: path
     version: "0.1.0"
   plasma_ui:
-    dependency: transitive
+    dependency: "direct main"
     description:
-      path: "../packages/plasma_ui"
+      path: "../plasma_ui"
       relative: true
     source: path
     version: "0.1.0"
   plasma_wallet:
-    dependency: transitive
+    dependency: "direct main"
     description:
-      path: "../packages/plasma_wallet"
+      path: "../plasma_wallet"
       relative: true
     source: path
     version: "0.1.0"
@@ -608,7 +586,7 @@ packages:
     source: hosted
     version: "1.1.1"
   web3dart:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: web3dart
       sha256: "885e5e8f0cc3c87c09f160a7fce6279226ca41316806f7ece2001959c62ecced"
@@ -632,5 +610,5 @@ packages:
     source: hosted
     version: "1.1.0"
 sdks:
-  dart: ">=3.9.2 <4.0.0"
+  dart: ">=3.9.0 <4.0.0"
   flutter: ">=3.35.0"

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-
-import 'plasma_theme.dart';
+import 'package:plasma_ui/plasma_ui.dart';
 
 class PlasmaButton extends StatelessWidget {
   final String text;

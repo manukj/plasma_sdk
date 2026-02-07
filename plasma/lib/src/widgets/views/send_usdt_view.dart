@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:plasma/plasma.dart';
+
+import '../../../plasma.dart';
 
 enum _SendState { input, sending, success, error }
 

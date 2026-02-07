@@ -1,0 +1,28 @@
+name: plasma_payment
+description: Payment operations for Plasma SDK with state management.
+version: 0.1.0
+publish_to: 'none'
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  plasma_core:
+    path: ../plasma_core
+  plasma_bridge:
+    path: ../plasma_bridge
+  plasma_wallet:
+    path: ../plasma_wallet
+  plasma_ui:
+    path: ../plasma_ui
+  flutter_bloc: ^8.1.6
+  bloc: ^8.1.4
+  equatable: ^2.0.5
+  web3dart: ^2.7.3
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0

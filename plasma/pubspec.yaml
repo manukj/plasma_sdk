@@ -10,16 +10,19 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  
-  # 1. The Bridge
-  flutter_inappwebview: ^6.0.0
-
-  # 2. Blockchain Interactions
-  web3dart: ^2.7.3
+  # Sub-packages
+  plasma_core:
+    path: packages/plasma_core
+  plasma_ui:
+    path: packages/plasma_ui
+  plasma_bridge:
+    path: packages/plasma_bridge
+  plasma_wallet:
+    path: packages/plasma_wallet
+  plasma_payment:
+    path: packages/plasma_payment
+  # Additional dependencies
   http: ^1.2.0
-  
-  # 3. Secure Storage (Keystore/Keychain)
-  flutter_secure_storage: ^9.0.0
 
 dev_dependencies:
   flutter_test:

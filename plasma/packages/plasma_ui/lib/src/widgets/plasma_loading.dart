@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'plasma_theme.dart';
+import 'package:plasma_ui/plasma_ui.dart';
 
 class PlasmaLoadingWidget extends StatefulWidget {
   final String? message;

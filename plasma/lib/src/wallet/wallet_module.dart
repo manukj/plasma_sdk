@@ -42,8 +42,7 @@ class WalletModule {
     var key = EthPrivateKey.createRandom(rng);
 
     // Save hex string to secure storage
-    String keyHex = key.privateKeyInt.toRadixString(16);
-    if (keyHex.length % 2 != 0) keyHex = '0$keyHex'; // Pad if necessary
+    final keyHex = key.privateKeyInt.toRadixString(16).padLeft(64, '0');
 
     await _storage.write(key: _storageKey, value: keyHex);
 

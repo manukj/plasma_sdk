@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
@@ -8,6 +10,25 @@ class BridgeModule {
   bool _isInitialized = false;
   bool get isInitialized => _isInitialized;
 
+  String _normalizePrivateKey(String privateKey) {
+    final trimmed = privateKey.trim();
+    final hexBody = trimmed.startsWith('0x') || trimmed.startsWith('0X')
+        ? trimmed.substring(2)
+        : trimmed;
+
+    if (hexBody.isEmpty || !RegExp(r'^[0-9a-fA-F]+$').hasMatch(hexBody)) {
+      throw const FormatException('Private key must be a valid hex string');
+    }
+
+    if (hexBody.length > 64) {
+      throw const FormatException(
+        'Private key must be 32 bytes (64 hex chars)',
+      );
+    }
+
+    return '0x${hexBody.padLeft(64, '0').toLowerCase()}';
+  }
+
   /// Initialize the headless WebView with the bundled JavaScript
   Future<void> init() async {
     if (_isInitialized) return;
@@ -15,12 +36,12 @@ class BridgeModule {
     debugPrint("🌉 BridgeModule: Initializing headless WebView...");
 
     // Load the bundled JavaScript from assets
-    final bundleJs = await rootBundle.loadString('assets/www/bundle.js');
-
+    final bundleJs = await rootBundle.loadString(
+      'packages/plasma/assets/www/bundle.js',
+    );
     _headlessWebView = HeadlessInAppWebView(
       initialData: InAppWebViewInitialData(
-        data:
-            '''
+        data: '''
 <!DOCTYPE html>
 <html>
 <head>
@@ -30,9 +51,7 @@ class BridgeModule {
 </head>
 <body>
     <h1>Plasma Bridge (Offline Mode)</h1>
-    <script>
-$bundleJs
-    </script>
+    <!-- bundle.js will be injected via evaluateJavascript -->
 </body>
 </html>
         ''',
@@ -52,8 +71,15 @@ $bundleJs
         debugPrint("🌉 BridgeModule: Loading $url");
       },
       onLoadStop: (controller, url) async {
-        debugPrint("✅ BridgeModule: WebView loaded successfully");
-        _isInitialized = true;
+        debugPrint("✅ BridgeModule: HTML loaded, injecting bundle...");
+        try {
+          // Inject the bundle
+          await controller.evaluateJavascript(source: bundleJs);
+          debugPrint("✅ BridgeModule: Bundle injected successfully");
+          _isInitialized = true;
+        } catch (e) {
+          debugPrint("❌ BridgeModule: Bundle injection failed - $e");
+        }
       },
       onConsoleMessage: (controller, consoleMessage) {
         // Forward JS console.log to Flutter debug console
@@ -90,39 +116,104 @@ $bundleJs
     }
   }
 
-  /// Send USDT transaction
+  /// Generates the EIP-3009 signature payload as a raw JSON string.
+  Future<String?> signGaslessTransfer({
+    required String privateKey,
+    required String from,
+    required String to,
+    required String amount,
+    required String tokenAddress,
+  }) async {
+    if (!_isInitialized || _controller == null) {
+      return "ERROR: Bridge not initialized";
+    }
+
+    try {
+      final normalizedPrivateKey = _normalizePrivateKey(privateKey);
+
+      final result = await _controller!.callAsyncJavaScript(
+        functionBody: """
+        return await window.bridge.signGaslessTransfer(
+            privateKey,
+            from,
+            to,
+            amount,
+            tokenAddress
+        );
+        """,
+        arguments: {
+          'privateKey': normalizedPrivateKey,
+          'from': from,
+          'to': to,
+          'amount': amount,
+          'tokenAddress': tokenAddress,
+        },
+      );
+
+      if (result == null || result.error != null) {
+        debugPrint(
+          "❌ BridgeModule: signGaslessTransfer JS call failed - "
+          "${result?.error ?? 'Unknown JS Error'}",
+        );
+        return "ERROR: ${result?.error ?? 'Unknown JS Error'}";
+      }
+
+      final rawValue = result.value?.toString() ?? '';
+      if (rawValue.startsWith('ERROR:')) {
+        debugPrint(
+          "❌ BridgeModule: signGaslessTransfer bridge error - $rawValue",
+        );
+        return rawValue;
+      }
+
+      return rawValue;
+    } catch (e) {
+      debugPrint("❌ BridgeModule: signGaslessTransfer failed - $e");
+      return "ERROR: $e";
+    }
+  }
+
+  /// Generates the EIP-3009 signature payload for a gasless USDT transfer.
+  Future<Map<String, dynamic>?> signGaslessUSDT({
+    required String privateKey,
+    required String from,
+    required String to,
+    required String amount,
+    required String tokenAddress,
+  }) async {
+    try {
+      final raw = await signGaslessTransfer(
+        privateKey: privateKey,
+        from: from,
+        to: to,
+        amount: amount,
+        tokenAddress: tokenAddress,
+      );
+
+      if (raw == null || raw.startsWith('ERROR:')) {
+        return null;
+      }
+
+      final decoded = jsonDecode(raw);
+      if (decoded is Map<String, dynamic>) return decoded;
+      if (decoded is Map) return Map<String, dynamic>.from(decoded);
+      return null;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  @Deprecated(
+    'Use signGaslessUSDT(...) and relay with PlasmaApi.submitGaslessTransfer(...)',
+  )
   Future<String> sendUSDT({
     required String privateKey,
     required String to,
     required String amount,
     required String tokenAddress,
   }) async {
-    if (!_isInitialized || _controller == null) {
-      return "Error: Bridge not initialized";
-    }
-
-    try {
-      final result = await _controller!.callAsyncJavaScript(
-        functionBody: """
-        return await window.bridge.sendUSDT(
-            arguments[0], // privateKey
-            arguments[1], // to
-            arguments[2], // amount
-            arguments[3]  // tokenAddress
-        );
-        """,
-        arguments: {'0': privateKey, '1': to, '2': amount, '3': tokenAddress},
-      );
-
-      if (result == null || result.error != null) {
-        return "Error: ${result?.error ?? 'Unknown JS Error'}";
-      }
-
-      return result.value.toString();
-    } catch (e) {
-      debugPrint("❌ BridgeModule: sendUSDT failed - $e");
-      return "Error: $e";
-    }
+    return 'Error: sendUSDT is deprecated. '
+        'Use signGaslessUSDT(...) and PlasmaApi.submitGaslessTransfer(...).';
   }
 
   /// Clean up resources

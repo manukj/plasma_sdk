@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:plasma/plasma.dart';
 
@@ -22,6 +24,8 @@ class _MyAppState extends State<MyApp> {
   String _balance = "---";
   bool _isLoadingBalance = false;
   String _bridgeStatus = "Testing...";
+  String _txStatus = "Ready to sign";
+  bool _isSending = false;
 
   @override
   void initState() {
@@ -92,6 +96,59 @@ class _MyAppState extends State<MyApp> {
     }
   }
 
+  Future<void> _sendGasless() async {
+    if (!Plasma.instance.wallet.isLoaded) return;
+
+    setState(() {
+      _isSending = true;
+      _txStatus = "⏳ Signing...";
+    });
+
+    try {
+      final credentials = Plasma.instance.wallet.credentials;
+      if (credentials is! EthPrivateKey) {
+        throw "Invalid credentials type";
+      }
+
+      final privateKey =
+          '0x${credentials.privateKeyInt.toRadixString(16).padLeft(64, '0')}';
+      final myAddress = Plasma.instance.wallet.address!;
+
+      final jsonString = await Plasma.instance.bridge.signGaslessTransfer(
+        privateKey: privateKey,
+        from: myAddress,
+        to: "0x000000000000000000000000000000000000dEaD",
+        amount: "1.0",
+        tokenAddress: Plasma.instance.usdtAddress,
+      );
+
+      if (jsonString == null || jsonString.startsWith("ERROR:")) {
+        setState(() {
+          _txStatus = "❌ Signing Failed:\n${jsonString ?? 'No response'}";
+          _isSending = false;
+        });
+        return;
+      }
+
+      setState(() {
+        _txStatus = "⏳ Relaying...";
+      });
+
+      final signedData = jsonDecode(jsonString) as Map<String, dynamic>;
+      final result = await PlasmaApi.submitGaslessTransfer(signedData);
+
+      setState(() {
+        _txStatus = result;
+        _isSending = false;
+      });
+    } catch (e) {
+      setState(() {
+        _txStatus = "❌ Exception: $e";
+        _isSending = false;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final wallet = Plasma.instance.wallet;
@@ -145,6 +202,74 @@ class _MyAppState extends State<MyApp> {
                       ),
                     ),
                   ],
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // Transaction Test Card
+              Card(
+                elevation: 2,
+                color: Colors.orange.shade50,
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Row(
+                        children: [
+                          Icon(Icons.send, color: Colors.deepOrange),
+                          SizedBox(width: 8),
+                          Text(
+                            'Gasless Signature Test',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      if (wallet.isLoaded) ...[
+                        Text(
+                          _txStatus,
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontFamily: 'monospace',
+                            color: _txStatus.startsWith('✅')
+                                ? Colors.green
+                                : _txStatus.startsWith('❌')
+                                ? Colors.red
+                                : Colors.black87,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            onPressed: _isSending ? null : _sendGasless,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.deepOrange,
+                              foregroundColor: Colors.white,
+                            ),
+                            child: _isSending
+                                ? const SizedBox(
+                                    width: 16,
+                                    height: 16,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: Colors.white,
+                                    ),
+                                  )
+                                : const Text('Send Gasless (1.0 USDT0)'),
+                          ),
+                        ),
+                      ] else
+                        const Text(
+                          'Create wallet to test transactions',
+                          style: TextStyle(fontStyle: FontStyle.italic),
+                        ),
+                    ],
+                  ),
                 ),
               ),
               const SizedBox(height: 32),
@@ -294,15 +419,15 @@ class _MyAppState extends State<MyApp> {
                   ),
                 ),
                 const SizedBox(height: 12),
-                OutlinedButton.icon(
-                  onPressed: _clear,
-                  icon: const Icon(Icons.delete_outline),
-                  label: const Text('Delete Wallet'),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: Colors.red,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                  ),
-                ),
+                // OutlinedButton.icon(
+                //   onPressed: _clear,
+                //   icon: const Icon(Icons.delete_outline),
+                //   label: const Text('Delete Wallet'),
+                //   style: OutlinedButton.styleFrom(
+                //     foregroundColor: Colors.red,
+                //     padding: const EdgeInsets.symmetric(vertical: 16),
+                //   ),
+                // ),
               ],
 
               const SizedBox(height: 32),

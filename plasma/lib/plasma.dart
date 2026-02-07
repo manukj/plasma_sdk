@@ -6,13 +6,21 @@ import 'package:flutter/foundation.dart';
 import 'src/bridge/bridge_module.dart';
 import 'src/wallet/wallet_module.dart';
 
+export 'package:web3dart/web3dart.dart'
+    show Credentials, EthPrivateKey, EthereumAddress;
+
 export 'src/bridge/bridge_module.dart';
+export 'src/api/plasma_api.dart';
 export 'src/wallet/wallet_module.dart';
 
 class Plasma {
   // Singleton Instance
   static final Plasma instance = Plasma._internal();
   Plasma._internal();
+
+  // ✅ VERIFIED CONTRACT ADDRESS (USDT0)
+  // Found on testnet.plasmascan.to/tokentxns
+  String usdtAddress = "0x246a94a471348881071bb475bf318b7119ab7e2d";
 
   // Public Modules
   late WalletModule wallet;

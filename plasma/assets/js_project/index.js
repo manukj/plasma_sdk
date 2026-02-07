@@ -1,70 +1,99 @@
-import { createWalletClient, http, parseUnits, encodeFunctionData } from 'viem';
+import { createWalletClient, http, parseUnits } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
 import { defineChain } from 'viem';
 
-// 1. Define Plasma Testnet Chain
 const plasmaTestnet = defineChain({
-    id: 9746,
-    name: 'Plasma Testnet',
-    network: 'plasma-testnet',
-    nativeCurrency: { name: 'Plasma', symbol: 'XPL', decimals: 18 },
-    rpcUrls: {
-        default: { http: ['https://testnet-rpc.plasma.to'] },
-        public: { http: ['https://testnet-rpc.plasma.to'] },
-    },
+  id: 9746,
+  name: 'Plasma Testnet',
+  network: 'plasma-testnet',
+  nativeCurrency: { name: 'Plasma', symbol: 'XPL', decimals: 18 },
+  rpcUrls: {
+    default: { http: ['https://testnet-rpc.plasma.to'] },
+    public: { http: ['https://testnet-rpc.plasma.to'] },
+  },
 });
 
-// 2. Define the Bridge API
-window.bridge = {
-    // Simple connectivity test
-    ping: () => "pong",
-
-    // Send USDT Function
-    sendUSDT: async (privateKey, to, amount, tokenAddress) => {
-        try {
-            console.log(`JS: Preparing to send ${amount} USDT to ${to}`);
-
-            // Setup Account
-            const account = privateKeyToAccount(privateKey);
-
-            // Setup Client
-            const client = createWalletClient({
-                account,
-                chain: plasmaTestnet,
-                transport: http()
-            });
-
-            // Encode Transaction (ERC20 Transfer)
-            // Assuming USDT has 6 decimals. If 18, change to 18.
-            const amountInWei = parseUnits(amount, 6);
-
-            const data = encodeFunctionData({
-                abi: [{
-                    name: 'transfer',
-                    type: 'function',
-                    inputs: [{ name: 'to', type: 'address' }, { name: 'amount', type: 'uint256' }],
-                    outputs: [{ name: '', type: 'bool' }]
-                }],
-                functionName: 'transfer',
-                args: [to, amountInWei]
-            });
-
-            // Send Transaction
-            const hash = await client.sendTransaction({
-                account,
-                to: tokenAddress,
-                data: data,
-                value: 0n // 0 XPL
-            });
-
-            console.log("JS: Transaction Sent! Hash: " + hash);
-            return hash;
-
-        } catch (e) {
-            console.error("JS Error: ", e);
-            return "ERROR: " + e.message;
-        }
-    }
+const EIP3009_TYPES = {
+  ReceiveWithAuthorization: [
+    { name: 'from', type: 'address' },
+    { name: 'to', type: 'address' },
+    { name: 'value', type: 'uint256' },
+    { name: 'validAfter', type: 'uint256' },
+    { name: 'validBefore', type: 'uint256' },
+    { name: 'nonce', type: 'bytes32' },
+  ],
 };
 
-console.log("✅ Offline Bridge Logic Loaded");
+const randomNonce32 = () => {
+  if (
+    !globalThis.crypto ||
+    typeof globalThis.crypto.getRandomValues !== 'function'
+  ) {
+    throw new Error('Secure random generator unavailable in this WebView');
+  }
+
+  const bytes = new Uint8Array(32);
+  globalThis.crypto.getRandomValues(bytes);
+  return (
+    '0x' +
+    Array.from(bytes)
+      .map((byte) => byte.toString(16).padStart(2, '0'))
+      .join('')
+  );
+};
+
+window.bridge = {
+  ping: () => 'pong',
+
+  signGaslessTransfer: async (privateKey, from, to, amount, tokenAddress) => {
+    try {
+      const account = privateKeyToAccount(privateKey);
+      const client = createWalletClient({
+        account,
+        chain: plasmaTestnet,
+        transport: http(),
+      });
+
+      const validAfter = BigInt(0);
+      const validBefore = BigInt(Math.floor(Date.now() / 1000) + 3600);
+      const nonce = randomNonce32();
+      const value = parseUnits(amount, 6);
+
+      const signature = await client.signTypedData({
+        account,
+        domain: {
+          name: 'USD Token',
+          version: '1',
+          chainId: 9746,
+          verifyingContract: tokenAddress,
+        },
+        types: EIP3009_TYPES,
+        primaryType: 'ReceiveWithAuthorization',
+        message: {
+          from,
+          to,
+          value,
+          validAfter,
+          validBefore,
+          nonce,
+        },
+      });
+
+      return JSON.stringify({
+        authorization: {
+          from,
+          to,
+          value: value.toString(),
+          validAfter: validAfter.toString(),
+          validBefore: validBefore.toString(),
+          nonce,
+        },
+        signature: signature,
+      });
+    } catch (e) {
+      return 'ERROR: ' + e.message;
+    }
+  },
+};
+
+console.log('✅ Offline Bridge Logic Loaded');

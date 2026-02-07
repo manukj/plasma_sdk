@@ -15,6 +15,10 @@ class BridgeModule {
   }
 
   Future<String> ping() async {
+    if (!isInitialized) {
+      return "Error: Bridge not initialized";
+    }
+
     try {
       final result = await _controller.evaluateJavascript(
         source: "window.bridge.ping()",

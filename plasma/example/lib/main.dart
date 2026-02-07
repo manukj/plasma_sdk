@@ -22,8 +22,6 @@ class _MyAppState extends State<MyApp> {
   String _balance = "---";
   bool _isLoadingBalance = false;
   String _bridgeStatus = "Testing...";
-  String _txStatus = "Ready to sign";
-  bool _isSending = false;
 
   @override
   void initState() {
@@ -95,32 +93,6 @@ class _MyAppState extends State<MyApp> {
     } catch (e) {
       setState(() {
         _bridgeStatus = "❌ Error: $e";
-      });
-    }
-  }
-
-  Future<void> _sendGasless() async {
-    if (!Plasma.instance.hasWallet) return;
-
-    setState(() {
-      _isSending = true;
-      _txStatus = "⏳ Sending...";
-    });
-
-    try {
-      final result = await Plasma.instance.send(
-        to: "0x000000000000000000000000000000000000dEaD",
-        amount: "1.0",
-      );
-
-      setState(() {
-        _txStatus = result;
-        _isSending = false;
-      });
-    } catch (e) {
-      setState(() {
-        _txStatus = "❌ Error: $e";
-        _isSending = false;
       });
     }
   }
@@ -206,37 +178,58 @@ class _MyAppState extends State<MyApp> {
                       ),
                       const SizedBox(height: 12),
                       if (hasWallet) ...[
-                        Text(
-                          _txStatus,
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontFamily: 'monospace',
-                            color: _txStatus.startsWith('✅')
-                                ? Colors.green
-                                : _txStatus.startsWith('❌')
-                                ? Colors.red
-                                : Colors.black87,
-                          ),
-                        ),
-                        const SizedBox(height: 12),
                         SizedBox(
                           width: double.infinity,
-                          child: ElevatedButton(
-                            onPressed: _isSending ? null : _sendGasless,
+                          child: ElevatedButton.icon(
+                            onPressed: () {
+                              showModalBottomSheet(
+                                context: context,
+                                isScrollControlled: true,
+                                backgroundColor: Colors.transparent,
+                                useSafeArea: true,
+                                builder: (context) => Container(
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.vertical(
+                                      top: Radius.circular(
+                                        PlasmaTheme.radius2xl,
+                                      ),
+                                    ),
+                                  ),
+                                  padding: EdgeInsets.only(
+                                    top: PlasmaTheme.spacingMd,
+                                    bottom: MediaQuery.of(
+                                      context,
+                                    ).viewInsets.bottom,
+                                  ),
+                                  child: SingleChildScrollView(
+                                    child: Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Container(
+                                          width: 40,
+                                          height: 4,
+                                          decoration: BoxDecoration(
+                                            color: PlasmaTheme.border,
+                                            borderRadius: BorderRadius.circular(
+                                              2,
+                                            ),
+                                          ),
+                                        ),
+                                        const PlasmaSendUSDTView(),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              );
+                            },
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.deepOrange,
                               foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 16),
                             ),
-                            child: _isSending
-                                ? const SizedBox(
-                                    width: 16,
-                                    height: 16,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                      color: Colors.white,
-                                    ),
-                                  )
-                                : const Text('Send Gasless (1.0 USDT0)'),
+                            icon: const Icon(Icons.send),
+                            label: const Text('Send USDT'),
                           ),
                         ),
                       ] else
@@ -315,7 +308,12 @@ class _MyAppState extends State<MyApp> {
                         ),
                       ),
                       const SizedBox(width: 8),
-                      Text(_bridgeStatus, style: const TextStyle(fontSize: 14)),
+                      Expanded(
+                        child: Text(
+                          _bridgeStatus,
+                          style: const TextStyle(fontSize: 14),
+                        ),
+                      ),
                       const Spacer(),
                       IconButton(
                         onPressed: _testBridge,

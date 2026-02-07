@@ -1,69 +1,171 @@
 # Plasma SDK
 
-A Flutter package that enables seamless communication between Flutter and a hidden JavaScript environment using a headless WebView.
+A powerful Flutter package for blockchain wallet management with beautiful UI components and seamless gasless transactions on the Plasma network.
+
+---
 
 ## Features
 
-- 🚀 **Headless WebView**: Execute JavaScript without visible UI elements
-- 🔄 **Bidirectional Communication**: Call JavaScript functions from Flutter and receive results
-- 📱 **Cross-Platform**: Works on iOS, Android, and macOS
-- 🛠️ **Simple API**: Easy-to-use SDK with minimal setup
+✅ **Self-Custodial Wallet** - Secure wallet creation and management  
+✅ **Gasless Transactions** - Send tokens without gas fees  
+✅ **Beautiful UI Widgets** - Pre-built, customizable components  
+✅ **Network Support** - Testnet and Mainnet configurations  
+✅ **Secure Storage** - Keychain/Keystore integration  
+✅ **Simple API** - High-level convenience methods  
 
-## Getting Started
+---
 
-### Installation
+## Quick Start
 
-Add `plasma` to your `pubspec.yaml`:
+### 1. Installation
+
+Add to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  plasma:
-    path: ../plasma  # Update with your actual path
+  plasma: ^0.0.1
 ```
 
-### Usage
+Then run:
+```bash
+flutter pub get
+```
 
-1. **Initialize the SDK**
+---
+
+### 2. Initialize SDK
 
 ```dart
 import 'package:plasma/plasma.dart';
 
-final sdk = PlasmaSDK();
-await sdk.initialize();
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  
+  // Initialize on Testnet
+  await Plasma.instance.init(network: Network.testnet);
+  
+  runApp(MyApp());
+}
 ```
 
-2. **Call JavaScript Functions**
+---
+
+### 3. Create Wallet with UI
 
 ```dart
-// Use the built-in getHelloWorld() function
-final message = await sdk.getHelloWorld();
-print(message); // "Hello World from JS World"
-
-// Or execute custom JavaScript
-final result = await sdk.evaluateJavascript('2 + 2');
-print(result); // 4
+// Show beautiful wallet creation sheet
+await showCreateWalletSheet(context);
 ```
 
-3. **Clean Up**
+**That's it!** Your users now have a beautiful wallet creation experience.
+
+---
+
+## Usage Examples
+
+### Create Wallet
 
 ```dart
-await sdk.dispose();
+// Using UI widget (Recommended)
+await showCreateWalletSheet(context);
+
+// Or programmatically
+await Plasma.instance.createWallet();
 ```
 
-## Example
+### Check Wallet Status
 
-See the `example` directory for a complete working example.
+```dart
+if (Plasma.instance.hasWallet) {
+  String? address = Plasma.instance.address;
+  print('Wallet: $address');
+}
+```
 
-## How It Works
+### Get Balance
 
-Plasma SDK uses `flutter_inappwebview` to create a headless WebView that loads an HTML file containing your JavaScript code. The SDK provides methods to execute JavaScript and retrieve results, enabling seamless integration between Flutter and JavaScript environments.
+```dart
+String balance = await Plasma.instance.getBalance();
+print('Balance: $balance XPL');
+```
+
+### Send USDT
+
+```dart
+try {
+  String result = await Plasma.instance.sendUSDT(
+    to: '0xRecipientAddress',
+    amount: '10.5',
+  );
+  print('Success: $result');
+} catch (e) {
+  print('Error: $e');
+}
+```
+
+---
+
+## UI Components
+
+### Wallet Creation Sheet
+
+Three-state flow with beautiful animations:
+1. **Initial** - Onboarding with features
+2. **Loading** - Wallet creation animation  
+3. **Success** - Wallet address display
+
+```dart
+PlasmaButton(
+  text: 'Get Started',
+  icon: Icons.account_balance_wallet,
+  onPressed: () => showCreateWalletSheet(context),
+)
+```
+
+See [UI Documentation](document/UI/ui_doc.md) for details.
+
+---
+
+## Documentation
+
+- **[API Reference](document/API.md)** - Complete API documentation
+- **[UI Widgets Guide](document/UI/ui_doc.md)** - UI components and usage
+- **[Example App](example/lib/main.dart)** - Full working example
+
+---
 
 ## Requirements
 
-- **iOS**: iOS 12.0 or higher
-- **Android**: API level 19 or higher
-- **macOS**: macOS 10.14 or higher
+- Flutter SDK: `>=3.9.2`
+- Dart SDK: `>=3.0.0`
+- Platforms: iOS, Android
+
+---
+
+## Security
+
+🔒 **Private keys never leave your device**  
+- Stored in iOS Keychain / Android Keystore
+- Hardware-backed encryption when available
+- No server-side key storage
+
+---
+
+## Example App
+
+Run the example app:
+
+```bash
+cd example
+flutter run
+```
+
+---
 
 ## License
 
-MIT License
+MIT License - See LICENSE file for details
+
+---
+
+**Built with ❤️ for the Plasma ecosystem**

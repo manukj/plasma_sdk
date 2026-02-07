@@ -93,13 +93,6 @@ class _PlasmaTranscationHistoryState extends State<PlasmaTranscationHistory> {
     return 'just now';
   }
 
-  String _getTransactionLabel(PlasmaTokenTransaction tx) {
-    final func = tx.functionName.toLowerCase();
-    if (func.contains('mint')) return 'MINT NFT';
-    if (tx.value == BigInt.zero || tx.methodId != '0x') return 'CONTRACT CALL';
-    return 'TRANSFER';
-  }
-
   Future<void> _openExplorer(String hash) async {
     final url = Uri.parse('https://testnet.plasmascan.to/tx/$hash');
     if (await canLaunchUrl(url)) {
@@ -135,6 +128,8 @@ class _PlasmaTranscationHistoryState extends State<PlasmaTranscationHistory> {
     final myAddress = Plasma.instance.address?.toLowerCase();
     final isIncoming = tx.to.toLowerCase() == myAddress;
     final amount = _formatTokenAmount(tx.value, tx.tokenDecimal);
+    final symbol = tx.tokenSymbol.isEmpty ? 'USDT' : tx.tokenSymbol;
+    final displayLabel = isIncoming ? 'From' : 'To';
     final displayAddress = isIncoming ? tx.from : tx.to;
 
     const addressTeal = Color(0xFF439696);
@@ -162,31 +157,12 @@ class _PlasmaTranscationHistoryState extends State<PlasmaTranscationHistory> {
           children: [
             Row(
               children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: badgeGrey,
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Text(
-                    _getTransactionLabel(tx),
-                    style: const TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 0.5,
-                      color: PlasmaTheme.textPrimary,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
                 Text(
-                  _getRelativeTime(tx.timeStamp),
+                  '${isIncoming ? '+' : '-'}$amount $symbol',
                   style: const TextStyle(
-                    color: PlasmaTheme.textTertiary,
-                    fontSize: 13,
+                    fontWeight: FontWeight.w800,
+                    fontSize: 15,
+                    color: PlasmaTheme.textPrimary,
                   ),
                 ),
                 const Spacer(),
@@ -212,52 +188,65 @@ class _PlasmaTranscationHistoryState extends State<PlasmaTranscationHistory> {
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  '${isIncoming ? '+' : '-'}$amount XPL',
+                  _getRelativeTime(tx.timeStamp),
                   style: const TextStyle(
-                    fontWeight: FontWeight.w800,
-                    fontSize: 15,
-                    color: PlasmaTheme.textPrimary,
+                    color: PlasmaTheme.textTertiary,
+                    fontSize: 13,
                   ),
                 ),
               ],
             ),
             const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: Row(
-                    children: [
-                      Text(
-                        _truncate(displayAddress),
-                        style: const TextStyle(
-                          color: addressTeal,
-                          fontFamily: 'monospace',
-                          fontSize: 15,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      GestureDetector(
-                        onTap: () {
-                          Clipboard.setData(
-                            ClipboardData(text: displayAddress),
-                          );
-                        },
-                        child: const Icon(
-                          Icons.copy_all_outlined,
-                          size: 18,
-                          color: Color(0xFFD0D5DD),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const Icon(Icons.chevron_right, color: Color(0xFFD0D5DD)),
-              ],
+            _buildAddressRow(
+              label: displayLabel,
+              value: displayAddress,
+              color: addressTeal,
             ),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildAddressRow({
+    required String label,
+    required String value,
+    required Color color,
+  }) {
+    return Row(
+      children: [
+        Text(
+          '$label:',
+          style: const TextStyle(
+            color: PlasmaTheme.textSecondary,
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(
+            _truncate(value),
+            style: TextStyle(
+              color: color,
+              fontFamily: 'monospace',
+              fontSize: 15,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ),
+        const SizedBox(width: 8),
+        GestureDetector(
+          onTap: () {
+            Clipboard.setData(ClipboardData(text: value));
+          },
+          child: const Icon(
+            Icons.copy_all_outlined,
+            size: 18,
+            color: Color(0xFFD0D5DD),
+          ),
+        ),
+      ],
     );
   }
 

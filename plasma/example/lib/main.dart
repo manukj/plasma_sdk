@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:plasma/plasma.dart';
+import 'package:plasma_genui/plasma_genui.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -143,356 +144,370 @@ class _MyAppState extends State<MyApp> {
           backgroundColor: Theme.of(context).colorScheme.inversePrimary,
           title: const Text('Plasma SDK Demo'),
         ),
-        body: SingleChildScrollView(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // Network Badge
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 6,
-                ),
-                decoration: BoxDecoration(
-                  color: Plasma.instance.network == Network.testnet
-                      ? Colors.orange.shade100
-                      : Colors.green.shade100,
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Icons.circle,
-                      size: 8,
-                      color: Plasma.instance.network == Network.testnet
-                          ? Colors.orange
-                          : Colors.green,
+        body: Stack(
+          children: [
+            SingleChildScrollView(
+              padding: const EdgeInsets.all(24.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // Network Badge
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
                     ),
-                    const SizedBox(width: 8),
-                    Text(
-                      network,
-                      style: TextStyle(
-                        fontWeight: FontWeight.w600,
-                        color: Plasma.instance.network == Network.testnet
-                            ? Colors.orange.shade900
-                            : Colors.green.shade900,
+                    decoration: BoxDecoration(
+                      color: Plasma.instance.network == Network.testnet
+                          ? Colors.orange.shade100
+                          : Colors.green.shade100,
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.circle,
+                          size: 8,
+                          color: Plasma.instance.network == Network.testnet
+                              ? Colors.orange
+                              : Colors.green,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          network,
+                          style: TextStyle(
+                            fontWeight: FontWeight.w600,
+                            color: Plasma.instance.network == Network.testnet
+                                ? Colors.orange.shade900
+                                : Colors.green.shade900,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+
+                  // Plasma Wallet Card
+                  // Wallet card if wallet exists
+                  if (hasWallet) const PlasmaWalletCard(),
+
+                  // 🧪 TEST: Load Test Wallet button
+                  if (!hasWallet) ...[
+                    const SizedBox(height: 16),
+                    ElevatedButton.icon(
+                      onPressed: _loadTestWallet,
+                      icon: const Icon(Icons.vpn_key),
+                      label: const Text('🧪 Load Test Wallet (Private Key)'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.purple.shade100,
+                        foregroundColor: Colors.purple.shade900,
                       ),
                     ),
                   ],
-                ),
-              ),
-              const SizedBox(height: 24),
 
-              // Plasma Wallet Card
-              // Wallet card if wallet exists
-              if (hasWallet) const PlasmaWalletCard(),
+                  const SizedBox(height: 16),
 
-              // 🧪 TEST: Load Test Wallet button
-              if (!hasWallet) ...[
-                const SizedBox(height: 16),
-                ElevatedButton.icon(
-                  onPressed: _loadTestWallet,
-                  icon: const Icon(Icons.vpn_key),
-                  label: const Text('🧪 Load Test Wallet (Private Key)'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.purple.shade100,
-                    foregroundColor: Colors.purple.shade900,
-                  ),
-                ),
-              ],
-
-              const SizedBox(height: 16),
-
-              // Transaction Test Card
-              Card(
-                elevation: 2,
-                color: Colors.orange.shade50,
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Row(
+                  // Transaction Test Card
+                  Card(
+                    elevation: 2,
+                    color: Colors.orange.shade50,
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Icon(Icons.send, color: Colors.deepOrange),
-                          SizedBox(width: 8),
-                          Text(
-                            'Gasless Signature Test',
+                          const Row(
+                            children: [
+                              Icon(Icons.send, color: Colors.deepOrange),
+                              SizedBox(width: 8),
+                              Text(
+                                'Gasless Signature Test',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          if (hasWallet) ...[
+                            SizedBox(
+                              width: double.infinity,
+                              child: ElevatedButton.icon(
+                                onPressed: () {
+                                  showModalBottomSheet(
+                                    context: context,
+                                    isScrollControlled: true,
+                                    backgroundColor: Colors.transparent,
+                                    useSafeArea: true,
+                                    builder: (context) => Container(
+                                      decoration: BoxDecoration(
+                                        color: Colors.white,
+                                        borderRadius: BorderRadius.vertical(
+                                          top: Radius.circular(
+                                            PlasmaTheme.radius2xl,
+                                          ),
+                                        ),
+                                      ),
+                                      padding: EdgeInsets.only(
+                                        top: PlasmaTheme.spacingMd,
+                                        bottom: MediaQuery.of(
+                                          context,
+                                        ).viewInsets.bottom,
+                                      ),
+                                      child: SingleChildScrollView(
+                                        child: Column(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Container(
+                                              width: 40,
+                                              height: 4,
+                                              decoration: BoxDecoration(
+                                                color: PlasmaTheme.border,
+                                                borderRadius:
+                                                    BorderRadius.circular(2),
+                                              ),
+                                            ),
+                                            const PlasmaSendUSDTView(),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  );
+                                },
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.deepOrange,
+                                  foregroundColor: Colors.white,
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 16,
+                                  ),
+                                ),
+                                icon: const Icon(Icons.send),
+                                label: const Text('Send USDT'),
+                              ),
+                            ),
+                          ] else
+                            const Text(
+                              'Create wallet to test transactions',
+                              style: TextStyle(fontStyle: FontStyle.italic),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 32),
+
+                  // Wallet Status Card
+                  Card(
+                    elevation: 2,
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Icon(
+                                hasWallet
+                                    ? Icons.account_balance_wallet
+                                    : Icons.warning_amber,
+                                color: hasWallet ? Colors.green : Colors.grey,
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                _walletStatus,
+                                style: const TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                          if (hasWallet) ...[
+                            const SizedBox(height: 16),
+                            const Text(
+                              'Address:',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            SelectableText(
+                              Plasma.instance.address ?? '',
+                              style: const TextStyle(
+                                fontFamily: 'monospace',
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Bridge Status Card
+                  Card(
+                    elevation: 2,
+                    color: Colors.purple.shade50,
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.link, color: Colors.purple),
+                          const SizedBox(width: 8),
+                          const Text(
+                            'Bridge Status:',
                             style: TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
-                      if (hasWallet) ...[
-                        SizedBox(
-                          width: double.infinity,
-                          child: ElevatedButton.icon(
-                            onPressed: () {
-                              showModalBottomSheet(
-                                context: context,
-                                isScrollControlled: true,
-                                backgroundColor: Colors.transparent,
-                                useSafeArea: true,
-                                builder: (context) => Container(
-                                  decoration: BoxDecoration(
-                                    color: Colors.white,
-                                    borderRadius: BorderRadius.vertical(
-                                      top: Radius.circular(
-                                        PlasmaTheme.radius2xl,
-                                      ),
-                                    ),
-                                  ),
-                                  padding: EdgeInsets.only(
-                                    top: PlasmaTheme.spacingMd,
-                                    bottom: MediaQuery.of(
-                                      context,
-                                    ).viewInsets.bottom,
-                                  ),
-                                  child: SingleChildScrollView(
-                                    child: Column(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Container(
-                                          width: 40,
-                                          height: 4,
-                                          decoration: BoxDecoration(
-                                            color: PlasmaTheme.border,
-                                            borderRadius: BorderRadius.circular(
-                                              2,
-                                            ),
-                                          ),
-                                        ),
-                                        const PlasmaSendUSDTView(),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              );
-                            },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.deepOrange,
-                              foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(vertical: 16),
-                            ),
-                            icon: const Icon(Icons.send),
-                            label: const Text('Send USDT'),
-                          ),
-                        ),
-                      ] else
-                        const Text(
-                          'Create wallet to test transactions',
-                          style: TextStyle(fontStyle: FontStyle.italic),
-                        ),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(height: 32),
-
-              // Wallet Status Card
-              Card(
-                elevation: 2,
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Icon(
-                            hasWallet
-                                ? Icons.account_balance_wallet
-                                : Icons.warning_amber,
-                            color: hasWallet ? Colors.green : Colors.grey,
-                          ),
                           const SizedBox(width: 8),
-                          Text(
-                            _walletStatus,
-                            style: const TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
+                          Expanded(
+                            child: Text(
+                              _bridgeStatus,
+                              style: const TextStyle(fontSize: 14),
                             ),
+                          ),
+                          const Spacer(),
+                          IconButton(
+                            onPressed: _testBridge,
+                            icon: const Icon(Icons.refresh, size: 18),
+                            tooltip: 'Test Bridge',
                           ),
                         ],
                       ),
-                      if (hasWallet) ...[
-                        const SizedBox(height: 16),
-                        const Text(
-                          'Address:',
-                          style: TextStyle(fontSize: 12, color: Colors.grey),
-                        ),
-                        const SizedBox(height: 4),
-                        SelectableText(
-                          Plasma.instance.address ?? '',
-                          style: const TextStyle(
-                            fontFamily: 'monospace',
-                            fontSize: 12,
-                          ),
-                        ),
-                      ],
-                    ],
+                    ),
                   ),
-                ),
-              ),
-              const SizedBox(height: 16),
+                  const SizedBox(height: 24),
 
-              // Bridge Status Card
-              Card(
-                elevation: 2,
-                color: Colors.purple.shade50,
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.link, color: Colors.purple),
-                      const SizedBox(width: 8),
-                      const Text(
-                        'Bridge Status:',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          _bridgeStatus,
-                          style: const TextStyle(fontSize: 14),
-                        ),
-                      ),
-                      const Spacer(),
-                      IconButton(
-                        onPressed: _testBridge,
-                        icon: const Icon(Icons.refresh, size: 18),
-                        tooltip: 'Test Bridge',
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(height: 24),
-
-              // USDT Balance Card
-              if (hasWallet) ...[
-                Card(
-                  elevation: 2,
-                  color: Colors.blue.shade50,
-                  child: Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'XPL Balance',
-                          style: TextStyle(fontSize: 14, color: Colors.grey),
-                        ),
-                        const SizedBox(height: 8),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  // USDT Balance Card
+                  if (hasWallet) ...[
+                    Card(
+                      elevation: 2,
+                      color: Colors.blue.shade50,
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            _isLoadingBalance
-                                ? const CircularProgressIndicator()
-                                : Text(
-                                    '\$$_balance',
-                                    style: const TextStyle(
-                                      fontSize: 32,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                            IconButton(
-                              onPressed: _isLoadingBalance ? null : _getBalance,
-                              icon: const Icon(Icons.refresh),
-                              tooltip: 'Refresh Balance',
+                            const Text(
+                              'XPL Balance',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Colors.grey,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                _isLoadingBalance
+                                    ? const CircularProgressIndicator()
+                                    : Text(
+                                        '\$$_balance',
+                                        style: const TextStyle(
+                                          fontSize: 32,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                IconButton(
+                                  onPressed: _isLoadingBalance
+                                      ? null
+                                      : _getBalance,
+                                  icon: const Icon(Icons.refresh),
+                                  tooltip: 'Refresh Balance',
+                                ),
+                              ],
                             ),
                           ],
                         ),
-                      ],
+                      ),
                     ),
-                  ),
-                ),
-                const SizedBox(height: 24),
-              ],
+                    const SizedBox(height: 24),
+                  ],
 
-              // Action Buttons
-              if (!hasWallet) ...[
-                PlasmaButton(
-                  text: 'Get Started',
-                  icon: Icons.account_balance_wallet,
-                  onPressed: _showCreateWalletSheet,
-                ),
-                const SizedBox(height: 12),
-                TextButton(
-                  onPressed: _create,
-                  child: const Text('Quick Create (No UI)'),
-                ),
-              ] else ...[
-                ElevatedButton.icon(
-                  onPressed: _isLoadingBalance ? null : _getBalance,
-                  icon: _isLoadingBalance
-                      ? const SizedBox(
-                          width: 16,
-                          height: 16,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Icon(Icons.account_balance),
-                  label: const Text('Get XPL Balance'),
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                OutlinedButton.icon(
-                  onPressed: _clear,
-                  icon: const Icon(Icons.delete_outline),
-                  label: const Text('Delete Wallet'),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: Colors.red,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                  ),
-                ),
-              ],
+                  // Action Buttons
+                  if (!hasWallet) ...[
+                    PlasmaButton(
+                      text: 'Get Started',
+                      icon: Icons.account_balance_wallet,
+                      onPressed: _showCreateWalletSheet,
+                    ),
+                    const SizedBox(height: 12),
+                    TextButton(
+                      onPressed: _create,
+                      child: const Text('Quick Create (No UI)'),
+                    ),
+                  ] else ...[
+                    ElevatedButton.icon(
+                      onPressed: _isLoadingBalance ? null : _getBalance,
+                      icon: _isLoadingBalance
+                          ? const SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Icon(Icons.account_balance),
+                      label: const Text('Get XPL Balance'),
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    OutlinedButton.icon(
+                      onPressed: _clear,
+                      icon: const Icon(Icons.delete_outline),
+                      label: const Text('Delete Wallet'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: Colors.red,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                      ),
+                    ),
+                  ],
 
-              const SizedBox(height: 32),
+                  const SizedBox(height: 32),
 
-              // Info Card
-              Card(
-                color: Colors.grey.shade100,
-                child: Padding(
-                  padding: const EdgeInsets.all(12.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Row(
+                  // Info Card
+                  Card(
+                    color: Colors.grey.shade100,
+                    child: Padding(
+                      padding: const EdgeInsets.all(12.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Icon(Icons.info_outline, size: 16),
-                          SizedBox(width: 8),
+                          const Row(
+                            children: [
+                              Icon(Icons.info_outline, size: 16),
+                              SizedBox(width: 8),
+                              Text(
+                                'Info',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
                           Text(
-                            'Info',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 12,
-                            ),
+                            '• Wallet keys are stored securely in ${Theme.of(context).platform == TargetPlatform.iOS ? 'iOS Keychain' : 'Android Keystore'}\n'
+                            '• XPL is the native token of Plasma Network\n'
+                            '• Balance shows 0.0000 if wallet has no funds',
+                            style: const TextStyle(fontSize: 11),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 8),
-                      Text(
-                        '• Wallet keys are stored securely in ${Theme.of(context).platform == TargetPlatform.iOS ? 'iOS Keychain' : 'Android Keystore'}\n'
-                        '• XPL is the native token of Plasma Network\n'
-                        '• Balance shows 0.0000 if wallet has no funds',
-                        style: const TextStyle(fontSize: 11),
-                      ),
-                    ],
+                    ),
                   ),
-                ),
+                ],
               ),
-            ],
-          ),
+            ),
+            Positioned(bottom: 24, right: 24, left: 24, child: PlasmaGenUi()),
+          ],
         ),
       ),
     );

@@ -38,6 +38,10 @@ dependencies:
   # Plasma SDK - local path reference
   plasma:
     path: ../
+  
+  # Plasma GenUI - conversational interface
+  plasma_genui:
+    path: ../packages/plasma_genui
 
 dev_dependencies:
   flutter_test:

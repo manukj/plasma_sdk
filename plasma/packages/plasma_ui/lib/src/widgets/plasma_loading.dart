@@ -4,8 +4,16 @@ import 'package:plasma_ui/plasma_ui.dart';
 class PlasmaLoadingWidget extends StatefulWidget {
   final String? message;
   final String? subtitle;
+  final double? size;
+  final CrossAxisAlignment crossAxisAlignment;
 
-  const PlasmaLoadingWidget({super.key, this.message, this.subtitle});
+  const PlasmaLoadingWidget({
+    super.key,
+    this.message,
+    this.subtitle,
+    this.size,
+    this.crossAxisAlignment = CrossAxisAlignment.center,
+  });
 
   @override
   State<PlasmaLoadingWidget> createState() => _PlasmaLoadingWidgetState();
@@ -34,10 +42,12 @@ class _PlasmaLoadingWidgetState extends State<PlasmaLoadingWidget>
   Widget build(BuildContext context) {
     return Column(
       mainAxisSize: MainAxisSize.min,
+      mainAxisAlignment: MainAxisAlignment.start,
+      crossAxisAlignment: widget.crossAxisAlignment,
       children: [
         SizedBox(
-          width: PlasmaTheme.loadingIndicator,
-          height: PlasmaTheme.loadingIndicator,
+          width: widget.size ?? PlasmaTheme.loadingIndicator,
+          height: widget.size ?? PlasmaTheme.loadingIndicator,
           child: AnimatedBuilder(
             animation: _controller,
             builder: (context, child) {
@@ -82,11 +92,14 @@ class _LoadingRingPainter extends CustomPainter {
     final center = Offset(size.width / 2, size.height / 2);
     final radius = size.width / 2;
 
+    // Scale all values based on size (baseline is 120px - PlasmaTheme.loadingIndicator)
+    final scale = size.width / 120.0;
+
     // Outer rings
     final outerPaint = Paint()
       ..color = PlasmaTheme.primary.withValues(alpha: 0.1)
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 2;
+      ..strokeWidth = 2 * scale;
 
     canvas.drawCircle(center, radius * 0.9, outerPaint);
     canvas.drawCircle(center, radius * 0.7, outerPaint);
@@ -95,7 +108,7 @@ class _LoadingRingPainter extends CustomPainter {
     final squarePaint = Paint()
       ..color = PlasmaTheme.primary
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 3;
+      ..strokeWidth = 3 * scale;
 
     final squareSize = radius * 0.6;
     final rect = Rect.fromCenter(
@@ -105,7 +118,10 @@ class _LoadingRingPainter extends CustomPainter {
     );
 
     final path = Path()
-      ..addRRect(RRect.fromRectAndRadius(rect, const Radius.circular(8)));
+      ..addRRect(RRect.fromRectAndRadius(
+        rect,
+        Radius.circular(8 * scale),
+      ));
     canvas.drawPath(path, squarePaint);
 
     // Center dot
@@ -113,7 +129,7 @@ class _LoadingRingPainter extends CustomPainter {
       ..color = PlasmaTheme.primary
       ..style = PaintingStyle.fill;
 
-    canvas.drawCircle(center, 6, dotPaint);
+    canvas.drawCircle(center, 6 * scale, dotPaint);
   }
 
   @override

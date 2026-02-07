@@ -1,0 +1,37 @@
+name: plasma_genui
+description: GenUI conversational interface for Plasma SDK
+version: 0.1.0
+publish_to: none
+
+environment:
+  sdk: ^3.5.0
+  flutter: ">=3.24.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  
+  # GenUI SDK
+  genui: 0.6.1
+  
+  # Plasma packages
+  plasma:
+    path: ../..
+  plasma_core:
+    path: ../plasma_core
+  plasma_ui:
+    path: ../plasma_ui
+  plasma_wallet:
+    path: ../plasma_wallet
+  
+  # State management
+  flutter_bloc: ^8.1.6
+  equatable: ^2.0.5
+  
+  # Schema
+  json_schema_builder: ^0.1.3
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0

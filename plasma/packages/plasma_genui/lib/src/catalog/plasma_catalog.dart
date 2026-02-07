@@ -2,17 +2,19 @@ import 'package:genui/genui.dart';
 import 'package:json_schema_builder/json_schema_builder.dart';
 import 'package:plasma/plasma.dart';
 
-/// Creates the Plasma widget catalog for GenUI
-/// Currently contains only PlasmaWalletCard for balance queries
+const String plasmaCatalogId = 'plasma:wallet_catalog:v1';
+
 Catalog createPlasmaCatalog() {
-  return Catalog([
-    // Balance widget
-    CatalogItem(
-      name: 'PlasmaWalletCard',
-      dataSchema: S.object(), // Empty schema - widget is self-contained
-      widgetBuilder: (itemContext) {
-        return const PlasmaWalletCard();
-      },
-    ),
-  ]);
+  return Catalog(
+    [
+      CatalogItem(
+        name: 'PlasmaWalletCard',
+        dataSchema: S.object(), 
+        widgetBuilder: (itemContext) {
+          return const PlasmaWalletCard();
+        },
+      ),
+    ],
+    catalogId: plasmaCatalogId,
+  );
 }

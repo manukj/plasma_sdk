@@ -1,4 +1,3 @@
-/// System prompt for Plasma GenUI
 const String plasmaSystemPrompt = '''
 You are a helpful assistant for the Plasma crypto wallet.
 
@@ -13,7 +12,6 @@ Guidelines:
 When user asks about balance, use PlasmaWalletCard widget.
 ''';
 
-/// GenUI configuration for Plasma
 class PlasmaGenUiConfig {
   static const systemPrompt = plasmaSystemPrompt;
   static const conversationTitle = 'Plasma Assistant';

@@ -18,7 +18,7 @@ class NetworkConfig {
   static const NetworkConfig testnet = NetworkConfig(
     name: "Plasma Testnet",
     rpcUrl: "https://testnet-rpc.plasma.to",
-    usdtAddress: "0x246a94a471348881071bb475bf318b7119ab7e2d",
+    usdtAddress: "0xf47d4D28f8645C077c7C2965A99145aa3E80AaDc",
     relayerUrl: "https://api.relayer.plasma.to",
     chainId: 9746,
   );

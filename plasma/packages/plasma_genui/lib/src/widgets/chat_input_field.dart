@@ -23,7 +23,7 @@ class _ChatInputFieldState extends State<ChatInputField> {
   void initState() {
     super.initState();
     widget.controller.addListener(() {
-      setState(() {}); // Rebuild for arrow color change
+      setState(() {}); 
     });
   }
 
@@ -65,7 +65,6 @@ class _ChatInputFieldState extends State<ChatInputField> {
             ),
           ),
           const SizedBox(width: 8),
-          // Send button with state-based styling
           Container(
             decoration: BoxDecoration(
               color: canSend ? PlasmaTheme.primary : Colors.grey.shade200,

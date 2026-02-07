@@ -1,4 +1,3 @@
-// Export all public components first (before any code)
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:genui/genui.dart';
@@ -17,17 +16,14 @@ export 'src/widgets/chat_message_bubble.dart';
 export 'src/widgets/plasma_genui_bottom_sheet.dart';
 export 'src/widgets/plasma_genui_trigger.dart';
 
-/// Main GenUI widget for Plasma - compact trigger that opens chat bottom sheet
 class PlasmaGenUi extends StatelessWidget {
   const PlasmaGenUi({super.key});
 
   void _openChat(BuildContext context) {
-    // Create dependencies
     final catalog = createPlasmaCatalog();
     final processor = A2uiMessageProcessor(catalogs: [catalog]);
     final generator = MockContentGenerator();
 
-    // Create cubit
     final cubit = GenUiCubit(
       generator: generator,
       processor: processor,
@@ -42,7 +38,6 @@ class PlasmaGenUi extends StatelessWidget {
         child: const PlasmaGenUiBottomSheet(),
       ),
     ).whenComplete(() {
-      // Clean up cubit when bottom sheet closes
       cubit.close();
     });
   }

@@ -1,6 +1,5 @@
 import 'package:equatable/equatable.dart';
 
-/// Represents a chat message in the conversation
 class PlasmaMessage extends Equatable {
   final String text;
   final bool isUser;

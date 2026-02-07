@@ -3,7 +3,6 @@ import 'package:plasma_ui/plasma_ui.dart';
 
 import '../models/chat_message.dart';
 
-/// Individual chat message bubble widget
 class ChatMessageBubble extends StatelessWidget {
   final PlasmaMessage message;
 

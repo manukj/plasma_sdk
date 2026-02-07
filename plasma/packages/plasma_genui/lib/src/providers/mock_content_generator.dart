@@ -3,8 +3,8 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:genui/genui.dart';
 
-/// Mock AI provider for testing GenUI without real AI backend
-/// Uses simple keyword matching to trigger widget rendering
+import '../catalog/plasma_catalog.dart';
+
 class MockContentGenerator implements ContentGenerator {
   final StreamController<A2uiMessage> _a2uiController =
       StreamController.broadcast();
@@ -35,39 +35,50 @@ class MockContentGenerator implements ContentGenerator {
     if (_disposed) return;
     _isProcessing.value = true;
 
-    // Extract text from message
     String userInput = '';
     if (message is UserUiInteractionMessage) {
       userInput = message.text.toLowerCase();
     }
 
-    // Simulate AI processing delay
-    await Future.delayed(const Duration(seconds: 20));
+    await Future.delayed(const Duration(seconds: 1));
 
     try {
-      // Simple keyword matching for balance query
       if (userInput.contains('balance') ||
           userInput.contains('how much') ||
           userInput.contains('funds') ||
           userInput.contains('wallet')) {
-        // Send text response
         _textController.add('Here\'s your wallet information:');
 
-        // Send A2UI SurfaceUpdate message
-        _a2uiController.add(SurfaceUpdate(
-          surfaceId: 'balance_surface',
+        await Future.delayed(const Duration(milliseconds: 200));
+
+        const surfaceId = 'balance_surface';
+        const rootComponentId = 'wallet_card';
+        final surfaceUpdate = SurfaceUpdate(
+          surfaceId: surfaceId,
           components: [
             Component(
-              id: 'wallet_card',
-              componentProperties: {
-                'type': 'PlasmaWalletCard',
-                'properties': {},
+              id: rootComponentId,
+              componentProperties: const {
+                'PlasmaWalletCard': <String, Object?>{},
               },
             ),
           ],
-        ));
+        );
+
+        debugPrint(
+            '🎨 MockContentGenerator: Sending SurfaceUpdate - ${surfaceUpdate.surfaceId}');
+        _a2uiController.add(surfaceUpdate);
+
+        final beginRendering = const BeginRendering(
+          surfaceId: surfaceId,
+          root: rootComponentId,
+          catalogId: plasmaCatalogId,
+        );
+        debugPrint(
+          '🎨 MockContentGenerator: Sending BeginRendering - ${beginRendering.surfaceId}',
+        );
+        _a2uiController.add(beginRendering);
       } else {
-        // Default response for unrecognized queries
         _textController.add(
           'I can help you check your balance. Try asking "What\'s my balance?"',
         );
@@ -85,7 +96,7 @@ class MockContentGenerator implements ContentGenerator {
 
   @override
   void dispose() {
-    if (_disposed) return; // Prevent double disposal
+    if (_disposed) return; 
     _disposed = true;
     _a2uiController.close();
     _textController.close();

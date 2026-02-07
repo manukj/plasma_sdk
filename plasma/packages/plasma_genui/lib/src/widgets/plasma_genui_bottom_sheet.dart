@@ -8,7 +8,6 @@ import '../cubit/genui_state.dart';
 import 'chat_input_field.dart';
 import 'chat_message_bubble.dart';
 
-/// Bottom sheet containing the GenUI chat interface
 class PlasmaGenUiBottomSheet extends StatelessWidget {
   const PlasmaGenUiBottomSheet({super.key});
 
@@ -24,7 +23,6 @@ class PlasmaGenUiBottomSheet extends StatelessWidget {
       ),
       child: Column(
         children: [
-          // Handle bar
           Container(
             margin: const EdgeInsets.symmetric(vertical: 12),
             width: 40,
@@ -35,7 +33,6 @@ class PlasmaGenUiBottomSheet extends StatelessWidget {
             ),
           ),
 
-          // Header
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Row(
@@ -43,12 +40,9 @@ class PlasmaGenUiBottomSheet extends StatelessWidget {
               children: [
                 Row(
                   children: [
-                    const Text(
-                      '✦',
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.w600,
-                      ),
+                    const Icon(
+                      Icons.auto_awesome,
+                      color: PlasmaTheme.primary,
                     ),
                     const SizedBox(width: 8),
                     const Text(
@@ -67,9 +61,10 @@ class PlasmaGenUiBottomSheet extends StatelessWidget {
               ],
             ),
           ),
-          const Divider(),
+          Divider(
+            color: PlasmaTheme.primary.withValues(alpha: 0.2),
+          ),
 
-          // Chat messages and surfaces
           Expanded(
             child: BlocBuilder<GenUiCubit, GenUiState>(
               builder: (context, state) {
@@ -82,12 +77,10 @@ class PlasmaGenUiBottomSheet extends StatelessWidget {
                   itemCount:
                       messages.length + surfaceIds.length + (isLoading ? 1 : 0),
                   itemBuilder: (context, index) {
-                    // Messages
                     if (index < messages.length) {
                       return ChatMessageBubble(message: messages[index]);
                     }
 
-                    // Surfaces
                     if (index < messages.length + surfaceIds.length) {
                       final surfaceIndex = index - messages.length;
                       final surfaceId = surfaceIds[surfaceIndex];
@@ -100,7 +93,6 @@ class PlasmaGenUiBottomSheet extends StatelessWidget {
                       );
                     }
 
-                    // Loading indicator
                     return const Padding(
                       padding: EdgeInsets.all(16),
                       child: PlasmaLoadingWidget(
@@ -115,7 +107,6 @@ class PlasmaGenUiBottomSheet extends StatelessWidget {
             ),
           ),
 
-          // Input field
           BlocBuilder<GenUiCubit, GenUiState>(
             builder: (context, state) {
               return ChatInputField(

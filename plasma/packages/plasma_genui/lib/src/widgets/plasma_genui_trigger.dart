@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:plasma_ui/plasma_ui.dart';
 
-/// Trigger button that opens the GenUI chat interface
 class PlasmaGenUiTrigger extends StatelessWidget {
   final VoidCallback onTap;
 

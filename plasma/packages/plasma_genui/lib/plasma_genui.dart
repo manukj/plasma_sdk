@@ -17,12 +17,17 @@ export 'src/widgets/plasma_genui_bottom_sheet.dart';
 export 'src/widgets/plasma_genui_trigger.dart';
 
 class PlasmaGenUi extends StatelessWidget {
-  const PlasmaGenUi({super.key});
+  const PlasmaGenUi({
+    super.key,
+    this.contentGenerator,
+  });
+
+  final ContentGenerator? contentGenerator;
 
   void _openChat(BuildContext context) {
     final catalog = createPlasmaCatalog();
     final processor = A2uiMessageProcessor(catalogs: [catalog]);
-    final generator = MockContentGenerator();
+    final generator = contentGenerator ?? MockContentGenerator();
 
     final cubit = GenUiCubit(
       generator: generator,

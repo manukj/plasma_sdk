@@ -5,11 +5,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:genui/genui.dart';
 
 import '../models/chat_message.dart';
-import '../providers/mock_content_generator.dart';
 import 'genui_state.dart';
 
 class GenUiCubit extends Cubit<GenUiState> {
-  final MockContentGenerator _generator;
+  final ContentGenerator _generator;
   final A2uiMessageProcessor _processor;
   late final GenUiConversation _conversation;
 
@@ -20,7 +19,7 @@ class GenUiCubit extends Cubit<GenUiState> {
   final List<String> _surfaceIds = [];
 
   GenUiCubit({
-    required MockContentGenerator generator,
+    required ContentGenerator generator,
     required A2uiMessageProcessor processor,
   })  : _generator = generator,
         _processor = processor,

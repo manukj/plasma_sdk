@@ -1,5 +1,5 @@
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../services/wallet_module.dart';
 import 'wallet_state.dart';
@@ -54,4 +54,9 @@ class WalletCubit extends Cubit<WalletState> {
 
   /// Get the underlying wallet module
   WalletModule get module => _walletModule;
+
+  /// Manually recheck wallet status (useful after loading test address)
+  void recheckWallet() {
+    _checkExistingWallet();
+  }
 }

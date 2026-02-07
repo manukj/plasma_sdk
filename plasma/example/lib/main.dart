@@ -57,6 +57,36 @@ class _MyAppState extends State<MyApp> {
     _checkWallet();
   }
 
+  // 🧪 TEST: Load a wallet from private key for testing
+  Future<void> _loadTestWallet() async {
+    // 👇 REPLACE THIS WITH YOUR TEST PRIVATE KEY
+    const testPrivateKey = '';
+
+    try {
+      final address = await Plasma.instance.loadTestWallet(testPrivateKey);
+      _checkWallet();
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Test wallet loaded! ✅\nAddress: ${address.substring(0, 10)}...',
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error loading wallet: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
   Future<void> _getBalance() async {
     if (!Plasma.instance.hasWallet) {
       ScaffoldMessenger.of(
@@ -156,10 +186,24 @@ class _MyAppState extends State<MyApp> {
               const SizedBox(height: 24),
 
               // Plasma Wallet Card
-              if (hasWallet) ...[
-                const PlasmaWalletCard(),
-                const SizedBox(height: 24),
+              // Wallet card if wallet exists
+              if (hasWallet) const PlasmaWalletCard(),
+
+              // 🧪 TEST: Load Test Wallet button
+              if (!hasWallet) ...[
+                const SizedBox(height: 16),
+                ElevatedButton.icon(
+                  onPressed: _loadTestWallet,
+                  icon: const Icon(Icons.vpn_key),
+                  label: const Text('🧪 Load Test Wallet (Private Key)'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.purple.shade100,
+                    foregroundColor: Colors.purple.shade900,
+                  ),
+                ),
               ],
+
+              const SizedBox(height: 16),
 
               // Transaction Test Card
               Card(

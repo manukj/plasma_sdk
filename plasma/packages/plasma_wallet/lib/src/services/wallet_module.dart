@@ -59,6 +59,22 @@ class WalletModule {
     _address = null;
   }
 
+  /// 🧪 TEST ONLY: Load a wallet from a private key for testing
+  /// This allows full wallet functionality including signing
+  Future<String> loadTestWallet(String privateKeyHex) async {
+    // Normalize the private key (handle 0x prefix, padding, etc)
+    final normalized = privateKeyHex.trim();
+    final hexBody = normalized.startsWith('0x') || normalized.startsWith('0X')
+        ? normalized.substring(2)
+        : normalized;
+
+    // Create credentials from private key
+    _credentials = EthPrivateKey.fromHex('0x${hexBody.padLeft(64, '0')}');
+    _address = _credentials!.address;
+
+    return _address!.hex;
+  }
+
   // --- BLOCKCHAIN DATA ---
 
   /// 4. Get Native Balance (XPL)

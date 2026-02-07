@@ -1,8 +1,8 @@
 import 'package:flutter/foundation.dart';
-import 'package:plasma_core/plasma_core.dart';
 import 'package:plasma_bridge/plasma_bridge.dart';
-import 'package:plasma_wallet/plasma_wallet.dart';
+import 'package:plasma_core/plasma_core.dart';
 import 'package:plasma_payment/plasma_payment.dart';
+import 'package:plasma_wallet/plasma_wallet.dart';
 
 /// Main Plasma SDK singleton class
 /// Provides convenient access to all modules and maintains backward compatibility
@@ -102,5 +102,15 @@ class Plasma {
   /// Delete wallet
   Future<void> deleteWallet() async {
     await _walletModule.clear();
+  }
+
+  /// 🧪 TEST ONLY: Load a wallet from a private key for testing
+  /// Use this to test full wallet functionality including signing and sending
+  /// Example: Plasma.instance.loadTestWallet('0xYourPrivateKeyHere')
+  Future<String> loadTestWallet(String privateKey) async {
+    final address = await _walletModule.loadTestWallet(privateKey);
+    // Trigger cubit to recheck wallet state
+    _walletCubit.recheckWallet();
+    return address;
   }
 }

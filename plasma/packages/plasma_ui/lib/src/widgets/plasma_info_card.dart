@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:plasma_ui/plasma_ui.dart';
 
-class PlasmaFeatureCard extends StatelessWidget {
+class PlasmaInfoCard extends StatelessWidget {
   final IconData icon;
   final String title;
   final String description;
 
-  const PlasmaFeatureCard({
+  const PlasmaInfoCard({
     super.key,
     required this.icon,
     required this.title,

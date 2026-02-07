@@ -159,13 +159,13 @@ class _CreateWalletSheetState extends State<_CreateWalletSheet> {
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: PlasmaTheme.spacing2xl),
-        const PlasmaFeatureCard(
+        const PlasmaInfoCard(
           icon: Icons.security,
           title: 'Military-grade Security',
           description: 'Your keys never leave your device.',
         ),
         const SizedBox(height: PlasmaTheme.spacingMd),
-        const PlasmaFeatureCard(
+        const PlasmaInfoCard(
           icon: Icons.flash_on,
           title: 'Instant Setup',
           description: 'Ready for the blockchain in seconds.',

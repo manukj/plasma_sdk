@@ -19,12 +19,28 @@ class ChatInputField extends StatefulWidget {
 }
 
 class _ChatInputFieldState extends State<ChatInputField> {
+  late final VoidCallback _controllerListener;
+
   @override
   void initState() {
     super.initState();
-    widget.controller.addListener(() {
-      setState(() {}); 
-    });
+    _controllerListener = () => setState(() {});
+    widget.controller.addListener(_controllerListener);
+  }
+
+  @override
+  void didUpdateWidget(covariant ChatInputField oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.controller != widget.controller) {
+      oldWidget.controller.removeListener(_controllerListener);
+      widget.controller.addListener(_controllerListener);
+    }
+  }
+
+  @override
+  void dispose() {
+    widget.controller.removeListener(_controllerListener);
+    super.dispose();
   }
 
   @override
@@ -32,53 +48,70 @@ class _ChatInputFieldState extends State<ChatInputField> {
     final hasText = widget.controller.text.trim().isNotEmpty;
     final canSend = hasText && !widget.isLoading;
 
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
+    return SafeArea(
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
         color: Colors.white,
-        border: Border(
-          top: BorderSide(color: Colors.grey.shade200),
-        ),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: PlasmaTheme.spacingMd,
-                vertical: PlasmaTheme.spacingSm,
+        child: Container(
+          padding: const EdgeInsets.all(PlasmaTheme.spacingMd),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(PlasmaTheme.radiusMd),
+            color: Colors.white,
+            border: Border.all(
+              color: PlasmaTheme.primary.withValues(alpha: 0.6),
+              width: 1.5,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.08),
+                blurRadius: 24,
+                offset: const Offset(0, 12),
               ),
-              decoration: BoxDecoration(
-                border: Border.all(color: PlasmaTheme.border),
-                borderRadius: BorderRadius.circular(PlasmaTheme.radiusMd),
+            ],
+          ),
+          child: Row(
+            children: [
+              const Icon(
+                Icons.chat_bubble_outline,
+                color: PlasmaTheme.textSecondary,
               ),
-              child: TextField(
-                controller: widget.controller,
-                decoration: const InputDecoration(
-                  hintText: 'What can I help with?...',
-                  border: InputBorder.none,
-                  isDense: true,
+              const SizedBox(width: PlasmaTheme.spacingSm),
+              Expanded(
+                child: TextField(
+                  controller: widget.controller,
+                  enabled: !widget.isLoading,
+                  textInputAction: TextInputAction.send,
+                  onSubmitted: (_) => canSend ? widget.onSend() : null,
+                  decoration: const InputDecoration(
+                    hintText: 'How can I help you today?',
+                    hintStyle: TextStyle(
+                      color: PlasmaTheme.textSecondary,
+                      fontSize: 14,
+                    ),
+                    border: InputBorder.none,
+                    isDense: true,
+                  ),
                 ),
-                onSubmitted: (_) => canSend ? widget.onSend() : null,
-                enabled: !widget.isLoading,
               ),
-            ),
-          ),
-          const SizedBox(width: 8),
-          Container(
-            decoration: BoxDecoration(
-              color: canSend ? PlasmaTheme.primary : Colors.grey.shade200,
-              shape: BoxShape.circle,
-            ),
-            child: IconButton(
-              icon: Icon(
-                Icons.arrow_upward_rounded,
-                color: canSend ? Colors.white : PlasmaTheme.textTertiary,
+              const SizedBox(width: PlasmaTheme.spacingSm),
+              GestureDetector(
+                onTap: canSend ? widget.onSend : null,
+                child: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: canSend ? PlasmaTheme.primary : Colors.grey.shade100,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    Icons.arrow_upward_rounded,
+                    size: 18,
+                    color: canSend ? Colors.white : PlasmaTheme.textTertiary,
+                  ),
+                ),
               ),
-              onPressed: canSend ? widget.onSend : null,
-            ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }

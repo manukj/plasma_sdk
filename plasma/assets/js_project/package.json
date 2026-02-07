@@ -12,6 +12,7 @@
   "type": "module",
   "dependencies": {
     "buffer": "^6.0.3",
+    "ethers": "^6.16.0",
     "viem": "^2.45.1"
   },
   "devDependencies": {

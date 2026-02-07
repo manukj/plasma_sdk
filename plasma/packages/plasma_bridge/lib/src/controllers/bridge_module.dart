@@ -36,6 +36,7 @@ class BridgeModule {
     required String to,
     required String amount,
     required String tokenAddress,
+    required String rpcUrl,
   }) async {
     try {
       final normalizedPrivateKey = CryptoUtils.normalizePrivateKey(privateKey);
@@ -47,7 +48,8 @@ class BridgeModule {
             from,
             to,
             amount,
-            tokenAddress
+            tokenAddress,
+            rpcUrl
         );
         """,
         arguments: {
@@ -56,6 +58,7 @@ class BridgeModule {
           'to': to,
           'amount': amount,
           'tokenAddress': tokenAddress,
+          'rpcUrl': rpcUrl,
         },
       );
 
@@ -88,6 +91,7 @@ class BridgeModule {
     required String to,
     required String amount,
     required String tokenAddress,
+    required String rpcUrl,
   }) async {
     try {
       final raw = await signGaslessTransfer(
@@ -96,6 +100,7 @@ class BridgeModule {
         to: to,
         amount: amount,
         tokenAddress: tokenAddress,
+        rpcUrl: rpcUrl,
       );
 
       if (raw == null || raw.startsWith('ERROR:')) {
@@ -112,7 +117,7 @@ class BridgeModule {
   }
 
   @Deprecated(
-    'Use signGaslessUSDT(...) and relay with PlasmaApi.submitGaslessTransfer(...)',
+    'Use signGaslessUSDT(...) and submit the transaction from app logic.',
   )
   Future<String> sendUSDT({
     required String privateKey,
@@ -121,7 +126,7 @@ class BridgeModule {
     required String tokenAddress,
   }) async {
     return 'Error: sendUSDT is deprecated. '
-        'Use signGaslessUSDT(...) and PlasmaApi.submitGaslessTransfer(...).';
+        'Use signGaslessUSDT(...) from payment flow.';
   }
 
   Future<void> dispose() async {

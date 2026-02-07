@@ -1,94 +1,48 @@
-import { createWalletClient, http, parseUnits } from 'viem';
-import { privateKeyToAccount } from 'viem/accounts';
-import { defineChain } from 'viem';
+import { ethers } from 'ethers';
 
-const plasmaTestnet = defineChain({
-  id: 9746,
-  name: 'Plasma Testnet',
-  network: 'plasma-testnet',
-  nativeCurrency: { name: 'Plasma', symbol: 'XPL', decimals: 18 },
-  rpcUrls: {
-    default: { http: ['https://testnet-rpc.plasma.to'] },
-    public: { http: ['https://testnet-rpc.plasma.to'] },
-  },
-});
-
-const EIP3009_TYPES = {
-  ReceiveWithAuthorization: [
-    { name: 'from', type: 'address' },
-    { name: 'to', type: 'address' },
-    { name: 'value', type: 'uint256' },
-    { name: 'validAfter', type: 'uint256' },
-    { name: 'validBefore', type: 'uint256' },
-    { name: 'nonce', type: 'bytes32' },
-  ],
-};
-
-const randomNonce32 = () => {
-  if (
-    !globalThis.crypto ||
-    typeof globalThis.crypto.getRandomValues !== 'function'
-  ) {
-    throw new Error('Secure random generator unavailable in this WebView');
-  }
-
-  const bytes = new Uint8Array(32);
-  globalThis.crypto.getRandomValues(bytes);
-  return (
-    '0x' +
-    Array.from(bytes)
-      .map((byte) => byte.toString(16).padStart(2, '0'))
-      .join('')
-  );
-};
+const DEFAULT_RPC_URL = 'https://testnet-rpc.plasma.to';
+const ERC20_ABI = [
+  'function decimals() view returns (uint8)',
+  'function transfer(address to, uint256 amount) returns (bool)',
+];
 
 window.bridge = {
   ping: () => 'pong',
 
-  signGaslessTransfer: async (privateKey, from, to, amount, tokenAddress) => {
+  signGaslessTransfer: async (
+    privateKey,
+    from,
+    to,
+    amount,
+    tokenAddress,
+    rpcUrl
+  ) => {
     try {
-      const account = privateKeyToAccount(privateKey);
-      const client = createWalletClient({
-        account,
-        chain: plasmaTestnet,
-        transport: http(),
-      });
+      const provider = new ethers.JsonRpcProvider(rpcUrl || DEFAULT_RPC_URL);
+      const wallet = new ethers.Wallet(privateKey, provider);
+      const token = new ethers.Contract(tokenAddress, ERC20_ABI, wallet);
 
-      const validAfter = BigInt(0);
-      const validBefore = BigInt(Math.floor(Date.now() / 1000) + 3600);
-      const nonce = randomNonce32();
-      const value = parseUnits(amount, 6);
+      const expectedFrom = (from || '').toLowerCase();
+      const actualFrom = wallet.address.toLowerCase();
+      if (expectedFrom && expectedFrom !== actualFrom) {
+        throw new Error(
+          `from/privateKey mismatch: expected ${from}, got ${wallet.address}`
+        );
+      }
 
-      const signature = await client.signTypedData({
-        account,
-        domain: {
-          name: 'USD Token',
-          version: '1',
-          chainId: 9746,
-          verifyingContract: tokenAddress,
-        },
-        types: EIP3009_TYPES,
-        primaryType: 'ReceiveWithAuthorization',
-        message: {
-          from,
-          to,
-          value,
-          validAfter,
-          validBefore,
-          nonce,
-        },
-      });
+      const decimals = await token.decimals();
+      const parsedAmount = ethers.parseUnits(amount, Number(decimals));
+      const tx = await token.transfer(to, parsedAmount);
+      const receipt = await tx.wait();
 
       return JSON.stringify({
-        authorization: {
-          from,
-          to,
-          value: value.toString(),
-          validAfter: validAfter.toString(),
-          validBefore: validBefore.toString(),
-          nonce,
-        },
-        signature: signature,
+        txHash: tx.hash,
+        blockNumber: receipt?.blockNumber?.toString() ?? null,
+        status: receipt?.status ?? null,
+        from: wallet.address,
+        to,
+        value: parsedAmount.toString(),
+        tokenAddress,
       });
     } catch (e) {
       return 'ERROR: ' + e.message;

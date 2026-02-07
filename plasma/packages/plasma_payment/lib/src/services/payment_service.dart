@@ -61,20 +61,25 @@ class PaymentService {
       to: to,
       amount: amount,
       tokenAddress: _networkConfig.usdt0Address,
+      rpcUrl: _networkConfig.rpcUrl,
     );
 
     if (signedTx == null) {
       throw Exception('Failed to sign transaction');
     }
 
-    // Submit to relayer
-    final txHash = await _submitToRelayer(signedTx);
+    final txHash = _extractTransactionHash(signedTx);
+    if (txHash == null || txHash.isEmpty) {
+      throw Exception('Transaction response missing txHash');
+    }
     return txHash;
   }
 
-  Future<String> _submitToRelayer(Map<String, dynamic> signedTx) async {
-    // TODO: Implement actual HTTP call to relayer
-    // For now, return a mock tx hash
-    return '0x${DateTime.now().millisecondsSinceEpoch.toRadixString(16)}';
+  String? _extractTransactionHash(Map<String, dynamic> response) {
+    final txHash = response['txHash'];
+    if (txHash is String && txHash.isNotEmpty) return txHash;
+    final hash = response['hash'];
+    if (hash is String && hash.isNotEmpty) return hash;
+    return null;
   }
 }

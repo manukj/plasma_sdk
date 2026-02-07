@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../plasma.dart';
 
@@ -128,6 +129,12 @@ class _PaymentViewState extends State<PaymentView> {
     }
   }
 
+  Future<void> _openTransactionOnExplorer(String txHash) async {
+    final baseUrl = "https://testnet.plasmascan.to";
+    final url = Uri.parse('$baseUrl/tx/$txHash');
+    await launchUrl(url, mode: LaunchMode.externalApplication);
+  }
+
   @override
   Widget build(BuildContext context) {
     final outerPadding = widget.compact
@@ -171,7 +178,11 @@ class _PaymentViewState extends State<PaymentView> {
             color: PlasmaTheme.textPrimary,
           ),
         ),
-        SizedBox(height: widget.compact ? PlasmaTheme.spacingMd : PlasmaTheme.spacing2xl),
+        SizedBox(
+          height: widget.compact
+              ? PlasmaTheme.spacingMd
+              : PlasmaTheme.spacing2xl,
+        ),
 
         // To Address Field
         Text(
@@ -328,7 +339,11 @@ class _PaymentViewState extends State<PaymentView> {
             ),
           ),
         ),
-        SizedBox(height: widget.compact ? PlasmaTheme.spacingMd : PlasmaTheme.spacingLg),
+        SizedBox(
+          height: widget.compact
+              ? PlasmaTheme.spacingMd
+              : PlasmaTheme.spacingLg,
+        ),
 
         if (!widget.compact) ...[
           // Informational hints (non-interactive)
@@ -405,7 +420,9 @@ class _PaymentViewState extends State<PaymentView> {
       width: double.infinity,
       child: Padding(
         padding: EdgeInsets.symmetric(
-          vertical: widget.compact ? PlasmaTheme.spacingLg : PlasmaTheme.spacing3xl,
+          vertical: widget.compact
+              ? PlasmaTheme.spacingLg
+              : PlasmaTheme.spacing3xl,
         ),
         child: const PlasmaLoadingWidget(
           message: 'Sending USDT...',
@@ -422,7 +439,7 @@ class _PaymentViewState extends State<PaymentView> {
           width: PlasmaTheme.iconContainerLg,
           height: PlasmaTheme.iconContainerLg,
           decoration: BoxDecoration(
-            color: PlasmaTheme.success,
+            color: PlasmaTheme.primary,
             borderRadius: BorderRadius.circular(PlasmaTheme.radiusXl),
           ),
           child: const Icon(
@@ -460,10 +477,10 @@ class _PaymentViewState extends State<PaymentView> {
               border: Border.all(color: PlasmaTheme.border),
             ),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 const Text(
-                  'Transaction Hash',
+                  'Transaction',
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
@@ -471,12 +488,38 @@ class _PaymentViewState extends State<PaymentView> {
                   ),
                 ),
                 const SizedBox(height: PlasmaTheme.spacingSm),
-                SelectableText(
-                  _txHash!,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    fontFamily: 'monospace',
-                    color: PlasmaTheme.textPrimary,
+
+                GestureDetector(
+                  onTap: () => _openTransactionOnExplorer(_txHash!),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: PlasmaTheme.spacingMd,
+                      vertical: PlasmaTheme.spacingSm,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade50,
+                      borderRadius: BorderRadius.circular(PlasmaTheme.radiusSm),
+                      border: Border.all(color: PlasmaTheme.border),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          _shortHash(_txHash!), // 0xabc…789
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontFamily: 'monospace',
+                            color: PlasmaTheme.textPrimary,
+                          ),
+                        ),
+                        const SizedBox(width: PlasmaTheme.spacingSm),
+                        const Icon(
+                          Icons.open_in_new,
+                          size: 14,
+                          color: PlasmaTheme.textTertiary,
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ],
@@ -488,6 +531,9 @@ class _PaymentViewState extends State<PaymentView> {
       ],
     );
   }
+
+  String _shortHash(String hash) =>
+      '${hash.substring(0, 6)}…${hash.substring(hash.length - 4)}';
 
   Widget _buildErrorState() {
     return Column(

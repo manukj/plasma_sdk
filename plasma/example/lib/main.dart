@@ -7,7 +7,7 @@ void main() async {
   // Initialize on Testnet (default network)
   await Plasma.instance.init(network: Network.testnet);
 
-  runApp(const MyApp());
+  runApp(MaterialApp(home: const MyApp()));
 }
 
 class MyApp extends StatefulWidget {
@@ -45,6 +45,11 @@ class _MyAppState extends State<MyApp> {
 
   Future<void> _create() async {
     await Plasma.instance.createWallet();
+    _checkWallet();
+  }
+
+  Future<void> _showCreateWalletSheet() async {
+    await showCreateWalletSheet(context);
     _checkWallet();
   }
 
@@ -366,13 +371,15 @@ class _MyAppState extends State<MyApp> {
 
               // Action Buttons
               if (!hasWallet) ...[
-                ElevatedButton.icon(
+                PlasmaButton(
+                  text: 'Get Started',
+                  icon: Icons.account_balance_wallet,
+                  onPressed: _showCreateWalletSheet,
+                ),
+                const SizedBox(height: 12),
+                TextButton(
                   onPressed: _create,
-                  icon: const Icon(Icons.add),
-                  label: const Text('Create New Wallet'),
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                  ),
+                  child: const Text('Quick Create (No UI)'),
                 ),
               ] else ...[
                 ElevatedButton.icon(
@@ -390,15 +397,15 @@ class _MyAppState extends State<MyApp> {
                   ),
                 ),
                 const SizedBox(height: 12),
-                // OutlinedButton.icon(
-                //   onPressed: _clear,
-                //   icon: const Icon(Icons.delete_outline),
-                //   label: const Text('Delete Wallet'),
-                //   style: OutlinedButton.styleFrom(
-                //     foregroundColor: Colors.red,
-                //     padding: const EdgeInsets.symmetric(vertical: 16),
-                //   ),
-                // ),
+                OutlinedButton.icon(
+                  onPressed: _clear,
+                  icon: const Icon(Icons.delete_outline),
+                  label: const Text('Delete Wallet'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Colors.red,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                  ),
+                ),
               ],
 
               const SizedBox(height: 32),

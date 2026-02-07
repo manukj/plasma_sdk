@@ -18,6 +18,7 @@ export 'src/api/plasma_api.dart';
 export 'src/bridge/bridge_module.dart';
 export 'src/config/network_config.dart';
 export 'src/wallet/wallet_module.dart';
+export 'src/widgets/plasma_widgets.dart';
 
 class Plasma {
   static final Plasma instance = Plasma._internal();
@@ -32,6 +33,7 @@ class Plasma {
 
   Network get network => _network;
   NetworkConfig get config => _config;
+  bool get isInitialized => _isInitialized;
 
   String get rpcUrl => _config.rpcUrl;
   String get usdtAddress => _config.usdtAddress;

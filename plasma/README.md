@@ -1,5 +1,13 @@
 # Plasma Mobile SDK
 
+## Demo
+
+![Plasma Mobile SDK Demo](document/UI/plasma_mobile_sdk_demo.gif)
+
+`[Replace with your latest demo GIF path if different]`
+
+---
+
 ## What Is Plasma Mobile SDK
 
 The **Plasma Mobile SDK** is a mobile integration layer, provided as a Flutter package, designed to simplify bringing Plasma blockchain capabilities into mobile apps.
@@ -110,5 +118,26 @@ Plasma Mobile SDK makes that usable in real merchant apps by combining:
 - payment-ready APIs
 - reusable mobile UI components
 - modular internals (`core`, `wallet`, `payment`, `bridge`, `ui`, `genui`)
+- GenUI for intent-driven, context-aware payment UX
 
 This creates a faster path from blockchain infrastructure to real user-facing payment products.
+
+---
+
+## UI Components
+
+The SDK ships reusable UI building blocks for payment experiences:
+
+- `PlasmaButton`
+- `PlasmaLoadingWidget`
+- `PlasmaWalletCard`
+- `PlasmaTranscationHistory`
+- `PaymentView`
+
+`[Add screenshot: PlasmaButton]`
+`[Add screenshot: PlasmaLoadingWidget]`
+`[Add screenshot: PlasmaWalletCard]`
+`[Add screenshot: PlasmaTranscationHistory]`
+`[Add screenshot: PaymentView]`
+
+---

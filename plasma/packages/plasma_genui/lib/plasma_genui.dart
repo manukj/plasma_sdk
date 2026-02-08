@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:genui/genui.dart';
+import 'package:genui_firebase_ai/genui_firebase_ai.dart';
+import 'package:flutter/foundation.dart';
 
 import 'src/catalog/plasma_catalog.dart';
+import 'src/config/genui_config.dart';
 import 'src/cubit/genui_cubit.dart';
 import 'src/providers/mock_content_generator.dart';
 import 'src/widgets/plasma_genui_bottom_sheet.dart';
@@ -16,18 +19,61 @@ export 'src/widgets/chat_message_bubble.dart';
 export 'src/widgets/plasma_genui_bottom_sheet.dart';
 export 'src/widgets/plasma_genui_trigger.dart';
 
+enum ContentGeneratorType { firebase, mock }
+
 class PlasmaGenUi extends StatelessWidget {
   const PlasmaGenUi({
     super.key,
-    this.contentGenerator,
+    this.contentGeneratorType = ContentGeneratorType.mock,
   });
 
-  final ContentGenerator? contentGenerator;
+  final ContentGeneratorType contentGeneratorType;
 
-  void _openChat(BuildContext context) {
+  Future<ContentGenerator> _createGenerator(Catalog catalog) async {
+    if (contentGeneratorType == ContentGeneratorType.mock) {
+      return MockContentGenerator();
+    }
+
+    if (!_supportsFirebaseAi) {
+      debugPrint(
+        'PlasmaGenUi: Firebase AI is not supported on this platform. Falling back to mock content generator.',
+      );
+      return MockContentGenerator();
+    }
+
+    try {
+      return FirebaseAiContentGenerator(
+        catalog: catalog,
+        systemInstruction: PlasmaGenUiConfig.systemPrompt,
+      );
+    } catch (error, stackTrace) {
+      debugPrint(
+        'PlasmaGenUi: Failed to initialize Firebase generator. Falling back to mock. Error: $error',
+      );
+      debugPrintStack(stackTrace: stackTrace);
+      return MockContentGenerator();
+    }
+  }
+
+  bool get _supportsFirebaseAi {
+    if (kIsWeb) return true;
+    return switch (defaultTargetPlatform) {
+      TargetPlatform.android ||
+      TargetPlatform.iOS ||
+      TargetPlatform.macOS => true,
+      _ => false,
+    };
+  }
+
+  Future<void> _openChat(BuildContext context) async {
     final catalog = createPlasmaCatalog();
     final processor = A2uiMessageProcessor(catalogs: [catalog]);
-    final generator = contentGenerator ?? MockContentGenerator();
+    final generator = await _createGenerator(catalog);
+
+    if (!context.mounted) {
+      generator.dispose();
+      return;
+    }
 
     final cubit = GenUiCubit(
       generator: generator,

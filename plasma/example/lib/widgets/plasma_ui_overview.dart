@@ -19,7 +19,7 @@ class _PlasmaUiOverviewState extends State<PlasmaUiOverview> {
 
   Future<void> _loadTestWallet() async {
     const testPrivateKey =
-        '355c82a40060acd13e0fc5c03c8748ba6c2b82f31f759dd51bf97ae42537d932';
+        '';
 
     try {
       await Plasma.instance.loadTestWallet(testPrivateKey);

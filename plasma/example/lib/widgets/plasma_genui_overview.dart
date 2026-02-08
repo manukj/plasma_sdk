@@ -15,14 +15,11 @@ class PlasmaGenUiOverview extends StatelessWidget {
             child: Center(
               child: Text(
                 'Plasma GenUI',
-                style: TextStyle(
-                  fontSize: 40,
-                  fontWeight: FontWeight.w800,
-                ),
+                style: TextStyle(fontSize: 40, fontWeight: FontWeight.w800),
               ),
             ),
           ),
-          PlasmaGenUi(),
+          PlasmaGenUi(contentGeneratorType: ContentGeneratorType.firebase),
         ],
       ),
     );

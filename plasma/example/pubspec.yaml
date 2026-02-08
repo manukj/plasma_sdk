@@ -43,6 +43,11 @@ dependencies:
   plasma_genui:
     path: ../packages/plasma_genui
 
+  # Firebase + GenUI integration
+  firebase_core: ^4.1.0
+  firebase_ai: ^3.7.0
+  genui_firebase_ai: ^0.6.1
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

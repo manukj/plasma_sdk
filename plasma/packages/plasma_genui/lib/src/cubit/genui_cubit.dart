@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:genui/genui.dart';
 
+import '../models/chat_feed_item.dart';
 import '../models/chat_message.dart';
 import 'genui_state.dart';
 
@@ -12,11 +13,11 @@ class GenUiCubit extends Cubit<GenUiState> {
   final A2uiMessageProcessor _processor;
   late final GenUiConversation _conversation;
 
+  StreamSubscription<A2uiMessage>? _a2uiSubscription;
   StreamSubscription<String>? _textSubscription;
   StreamSubscription<ContentGeneratorError>? _errorSubscription;
 
-  final List<PlasmaMessage> _messages = [];
-  final List<String> _surfaceIds = [];
+  final List<PlasmaFeedItem> _items = [];
 
   GenUiCubit({
     required ContentGenerator generator,
@@ -35,45 +36,36 @@ class GenUiCubit extends Cubit<GenUiState> {
       onSurfaceAdded: (update) {
         debugPrint(
             '🔷 GenUiCubit: onSurfaceAdded called - ${update.surfaceId}');
-        if (!_surfaceIds.contains(update.surfaceId)) {
-          _surfaceIds.add(update.surfaceId);
-          debugPrint('🔷 GenUiCubit: Surface IDs now: $_surfaceIds');
-          emit(GenUiSurfaceAdded(
-            messages: List.from(_messages),
-            surfaceIds: List.from(_surfaceIds),
-          ));
-        } else {
-          debugPrint(
-              '🔷 GenUiCubit: Surface ID ${update.surfaceId} already exists, ignoring add');
+        if (!_hasSurface(update.surfaceId)) {
+          _items.add(PlasmaFeedItem.surface(update.surfaceId));
         }
+        emit(GenUiSurfaceAdded(items: List.from(_items)));
       },
       onSurfaceUpdated: (update) {
         debugPrint(
             '🔹 GenUiCubit: onSurfaceUpdated called - ${update.surfaceId}');
-        if (!_surfaceIds.contains(update.surfaceId)) {
-          _surfaceIds.add(update.surfaceId);
-          debugPrint(
-              '🔹 GenUiCubit: Added missing surface via update: $_surfaceIds');
-          emit(GenUiSurfaceAdded(
-            messages: List.from(_messages),
-            surfaceIds: List.from(_surfaceIds),
-          ));
+        if (!_hasSurface(update.surfaceId)) {
+          _items.add(PlasmaFeedItem.surface(update.surfaceId));
         }
+        emit(GenUiSurfaceAdded(items: List.from(_items)));
       },
       onSurfaceDeleted: (update) {
         debugPrint(
             '🔶 GenUiCubit: onSurfaceDeleted called - ${update.surfaceId}');
-        _surfaceIds.remove(update.surfaceId);
-        emit(GenUiMessageReceived(
-          messages: List.from(_messages),
-          surfaceIds: List.from(_surfaceIds),
-        ));
+        _items.removeWhere(
+          (item) => item.isSurface && item.surfaceId == update.surfaceId,
+        );
+        emit(GenUiMessageReceived(items: List.from(_items)));
       },
     );
   }
 
+  bool _hasSurface(String surfaceId) {
+    return _items.any((item) => item.isSurface && item.surfaceId == surfaceId);
+  }
+
   void _setupListeners() {
-    _generator.a2uiMessageStream.listen((message) {
+    _a2uiSubscription = _generator.a2uiMessageStream.listen((message) {
       debugPrint(
           '🔍 GenUiCubit: Received raw A2UI message of type ${message.runtimeType}');
       if (message is SurfaceUpdate) {
@@ -82,23 +74,27 @@ class GenUiCubit extends Cubit<GenUiState> {
     });
 
     _textSubscription = _generator.textResponseStream.listen((text) {
-      _messages.add(PlasmaMessage(text: text, isUser: false));
-      emit(GenUiMessageReceived(
-        messages: List.from(_messages),
-        surfaceIds: List.from(_surfaceIds),
-      ));
+      _items.add(
+        PlasmaFeedItem.message(
+          PlasmaMessage(text: text, isUser: false),
+        ),
+      );
+      emit(GenUiMessageReceived(items: List.from(_items)));
     });
 
     _errorSubscription = _generator.errorStream.listen((error) {
-      _messages.add(PlasmaMessage(
-        text: 'Error: ${error.error}',
-        isUser: false,
-        isError: true,
-      ));
+      _items.add(
+        PlasmaFeedItem.message(
+          PlasmaMessage(
+            text: 'Error: ${error.error}',
+            isUser: false,
+            isError: true,
+          ),
+        ),
+      );
       emit(GenUiError(
         message: error.error.toString(),
-        messages: List.from(_messages),
-        surfaceIds: List.from(_surfaceIds),
+        items: List.from(_items),
       ));
     });
   }
@@ -106,12 +102,13 @@ class GenUiCubit extends Cubit<GenUiState> {
   void sendMessage(String text) {
     if (text.trim().isEmpty) return;
 
-    _messages.add(PlasmaMessage(text: text, isUser: true));
+    _items.add(
+      PlasmaFeedItem.message(
+        PlasmaMessage(text: text, isUser: true),
+      ),
+    );
 
-    emit(GenUiLoading(
-      messages: List.from(_messages),
-      surfaceIds: List.from(_surfaceIds),
-    ));
+    emit(GenUiLoading(items: List.from(_items)));
 
     _conversation.sendRequest(UserUiInteractionMessage.text(text));
   }
@@ -120,9 +117,10 @@ class GenUiCubit extends Cubit<GenUiState> {
 
   @override
   Future<void> close() {
+    _a2uiSubscription?.cancel();
     _textSubscription?.cancel();
     _errorSubscription?.cancel();
-    _generator.dispose();
+    // GenUiConversation.dispose() already disposes contentGenerator and processor.
     _conversation.dispose();
     return super.close();
   }

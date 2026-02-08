@@ -17,14 +17,12 @@ class TranscationHistoryCatalogBuilder {
       number = int.tryParse(rawNumber) ?? 10;
     }
 
-    if (number <= 0) number = 10;
-    if (number > 50) number = 50;
+    if (number > 50) number = 30;
 
     return Container(
       decoration: BoxDecoration(
-        
         borderRadius: BorderRadius.circular(8),
-       border: Border.all(color: PlasmaTheme.primary),
+        border: Border.all(color: PlasmaTheme.primary),
       ),
       padding: const EdgeInsets.all(8),
       child: PlasmaTranscationHistory(number: number),

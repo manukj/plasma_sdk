@@ -13,6 +13,11 @@ dependencies:
   
   # GenUI SDK
   genui: 0.6.1
+  genui_firebase_ai: ^0.6.1
+
+  # Firebase support for GenUI content generation
+  firebase_core: ^4.1.0
+  firebase_ai: ^3.7.0
   
   # Plasma packages
   plasma:

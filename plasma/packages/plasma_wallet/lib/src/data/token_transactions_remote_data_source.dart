@@ -39,6 +39,7 @@ class TokenTransactionsRemoteDataSource {
         'module': 'account',
         'offset': safeNumber.toString(),
         'sort': 'desc',
+        'page': '1',
       },
     );
 

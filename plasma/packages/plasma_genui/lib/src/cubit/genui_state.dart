@@ -1,6 +1,6 @@
 import 'package:equatable/equatable.dart';
 
-import '../models/chat_message.dart';
+import '../models/chat_feed_item.dart';
 
 abstract class GenUiState extends Equatable {
   const GenUiState();
@@ -14,57 +14,49 @@ class GenUiInitial extends GenUiState {
 }
 
 class GenUiLoading extends GenUiState {
-  final List<PlasmaMessage> messages;
-  final List<String> surfaceIds;
+  final List<PlasmaFeedItem> items;
 
   const GenUiLoading({
-    required this.messages,
-    required this.surfaceIds,
+    required this.items,
   });
 
   @override
-  List<Object?> get props => [messages, surfaceIds];
+  List<Object?> get props => [items];
 }
 
 class GenUiMessageReceived extends GenUiState {
-  final List<PlasmaMessage> messages;
-  final List<String> surfaceIds;
+  final List<PlasmaFeedItem> items;
 
   const GenUiMessageReceived({
-    required this.messages,
-    required this.surfaceIds,
+    required this.items,
   });
 
   @override
-  List<Object?> get props => [messages, surfaceIds];
+  List<Object?> get props => [items];
 }
 
 /// State when a surface is added
 class GenUiSurfaceAdded extends GenUiState {
-  final List<PlasmaMessage> messages;
-  final List<String> surfaceIds;
+  final List<PlasmaFeedItem> items;
 
   const GenUiSurfaceAdded({
-    required this.messages,
-    required this.surfaceIds,
+    required this.items,
   });
 
   @override
-  List<Object?> get props => [messages, surfaceIds];
+  List<Object?> get props => [items];
 }
 
 /// Error state
 class GenUiError extends GenUiState {
   final String message;
-  final List<PlasmaMessage> messages;
-  final List<String> surfaceIds;
+  final List<PlasmaFeedItem> items;
 
   const GenUiError({
     required this.message,
-    required this.messages,
-    required this.surfaceIds,
+    required this.items,
   });
 
   @override
-  List<Object?> get props => [message, messages, surfaceIds];
+  List<Object?> get props => [message, items];
 }

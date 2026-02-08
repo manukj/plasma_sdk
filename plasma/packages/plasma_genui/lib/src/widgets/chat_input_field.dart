@@ -78,6 +78,8 @@ class _ChatInputFieldState extends State<ChatInputField> {
               const SizedBox(width: PlasmaTheme.spacingSm),
               Expanded(
                 child: TextField(
+                  maxLines: null,
+                  minLines: 1,
                   controller: widget.controller,
                   enabled: !widget.isLoading,
                   textInputAction: TextInputAction.send,

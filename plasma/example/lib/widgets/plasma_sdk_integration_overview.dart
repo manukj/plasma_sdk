@@ -11,8 +11,6 @@ void main() async {
 
   await Plasma.instance.init(
     network: Network.testnet,
-    envFile: '.env', // optional
-    // etherscanApiKey: 'YOUR_KEY', // optional
   );
 
   runApp(const MyApp());
@@ -63,11 +61,10 @@ void main() async {
                     apis: [
                       'createWallet()',
                       'deleteWallet()',
-                      'loadTestWallet(privateKey)',
                     ],
                   ),
                   _FeatureSection(
-                    title: 'Balances',
+                    title: 'Account',
                     apis: [
                       'getStableTokenBalance()',
                       'getGasTokenBalance()',

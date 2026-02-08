@@ -1,12 +1,19 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:plasma/plasma.dart';
 
+import 'firebase_options.dart';
 import 'widgets/plasma_genui_overview.dart';
 import 'widgets/plasma_sdk_integration_overview.dart';
 import 'widgets/plasma_ui_overview.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+    name: "Plasma Example App",
+  );
 
   await Plasma.instance.init(network: Network.testnet);
 

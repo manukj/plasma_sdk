@@ -1,171 +1,114 @@
-# Plasma SDK
+# Plasma Mobile SDK
 
-A powerful Flutter package for blockchain wallet management with beautiful UI components and seamless gasless transactions on the Plasma network.
+## What Is Plasma Mobile SDK
 
----
+The **Plasma Mobile SDK** is a mobile integration layer, provided as a Flutter package, designed to simplify bringing Plasma blockchain capabilities into mobile apps.
 
-## Features
+Its primary objective is to increase stablecoin adoption by enabling merchants to integrate Plasma as their **USDT payment infrastructure**.
 
-✅ **Self-Custodial Wallet** - Secure wallet creation and management  
-✅ **Gasless Transactions** - Send tokens without gas fees  
-✅ **Beautiful UI Widgets** - Pre-built, customizable components  
-✅ **Network Support** - Testnet and Mainnet configurations  
-✅ **Secure Storage** - Keychain/Keystore integration  
-✅ **Simple API** - High-level convenience methods  
-
----
-
-## Quick Start
-
-### 1. Installation
-
-Add to your `pubspec.yaml`:
-
-```yaml
-dependencies:
-  plasma: ^0.0.1
-```
-
-Then run:
-```bash
-flutter pub get
-```
-
----
-
-### 2. Initialize SDK
+The SDK entry point is:
 
 ```dart
-import 'package:plasma/plasma.dart';
-
-void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  
-  // Initialize on Testnet
-  await Plasma.instance.init(network: Network.testnet);
-  
-  runApp(MyApp());
-}
+Plasma.instance
 ```
 
 ---
 
-### 3. Create Wallet with UI
+## Core Value
 
-```dart
-// Show beautiful wallet creation sheet
-await showCreateWalletSheet(context);
-```
+Plasma Mobile SDK gives teams a single integration surface for:
 
-**That's it!** Your users now have a beautiful wallet creation experience.
+- wallet lifecycle
+- account state
+- stablecoin payment execution
+- transaction retrieval
+- reusable UI surfaces
+- AI-powered dynamic UI via GenUI
 
----
-
-## Usage Examples
-
-### Create Wallet
-
-```dart
-// Using UI widget (Recommended)
-await showCreateWalletSheet(context);
-
-// Or programmatically
-await Plasma.instance.createWallet();
-```
-
-### Check Wallet Status
-
-```dart
-if (Plasma.instance.hasWallet) {
-  String? address = Plasma.instance.address;
-  print('Wallet: $address');
-}
-```
-
-### Get Balance
-
-```dart
-String balance = await Plasma.instance.getBalance();
-print('Balance: $balance XPL');
-```
-
-### Send USDT
-
-```dart
-try {
-  String result = await Plasma.instance.sendUSDT(
-    to: '0xRecipientAddress',
-    amount: '10.5',
-  );
-  print('Success: $result');
-} catch (e) {
-  print('Error: $e');
-}
-```
+This reduces integration effort and makes production adoption faster.
 
 ---
 
-## UI Components
+## Key Functionalities
 
-### Wallet Creation Sheet
+### 1. Core Operations
 
-Three-state flow with beautiful animations:
-1. **Initial** - Onboarding with features
-2. **Loading** - Wallet creation animation  
-3. **Success** - Wallet address display
+- create wallet
+- load existing/test wallet
+- read gas and stable token balances
+- send USDT payments
+- fetch transaction history
 
-```dart
-PlasmaButton(
-  text: 'Get Started',
-  icon: Icons.account_balance_wallet,
-  onPressed: () => showCreateWalletSheet(context),
-)
-```
+### 2. Public API + Ready UI
 
-See [UI Documentation](document/UI/ui_doc.md) for details.
+The SDK provides both:
 
----
+- public APIs for programmatic control
+- prebuilt widgets for immediate integration
 
-## Documentation
+Examples:
 
-- **[API Reference](document/API.md)** - Complete API documentation
-- **[UI Widgets Guide](document/UI/ui_doc.md)** - UI components and usage
-- **[Example App](example/lib/main.dart)** - Full working example
+- `PlasmaWalletCard`
+- `PlasmaTranscationHistory`
+- `PaymentView`
 
----
+### 3. Internal Runtime Architecture
 
-## Requirements
+The SDK internally bundles Plasma network configuration and uses a headless browser runtime for bridge-driven blockchain operations.
 
-- Flutter SDK: `>=3.9.2`
-- Dart SDK: `>=3.0.0`
-- Platforms: iOS, Android
+At runtime:
 
----
-
-## Security
-
-🔒 **Private keys never leave your device**  
-- Stored in iOS Keychain / Android Keystore
-- Hardware-backed encryption when available
-- No server-side key storage
+- Flutter app calls SDK APIs
+- SDK uses a JS bridge (`plasma_bridge`)
+- headless WebView runs bundled JS (`assets/www/bundle.js`)
+- bundled JS connects to Plasma RPC and signs/submits flow-specific operations
 
 ---
 
-## Example App
+## Public APIs (`Plasma.instance`)
 
-Run the example app:
-
-```bash
-cd example
-flutter run
-```
-
----
-
-## License
-
-MIT License - See LICENSE file for details
+| Method | Purpose |
+| --- | --- |
+| `init()` | Initialize SDK/network |
+| `createWallet()` | Create new wallet |
+| `deleteWallet()` | Clear wallet |
+| `getGasTokenBalance()` | Get XPL balance |
+| `getStableTokenBalance()` | Get USDT0 balance |
+| `getTokenTransactions(number)` | Get transaction history |
+| `sendUSDT(to, amount)` | Send stablecoin payment |
 
 ---
 
-**Built with ❤️ for the Plasma ecosystem**
+## GenUI (Generative UI)
+
+`Plasma GenUI` is a context-aware conversational layer that dynamically composes SDK surfaces based on user intent.
+
+Instead of merchants building static flows for every action, they can expose a chatbot-like entry that drives the same trusted SDK widgets.
+
+### What It Enables
+
+- intent-based actions through natural input
+- pre-filled payment surfaces
+- dynamic balance and transaction views
+- faster UX iteration without hardcoded route trees
+
+### Example User Intents
+
+- “send 0.23 USDT to 0x...”
+- “show my wallet balance”
+- “show my last two transactions”
+
+In each case, GenUI uses existing SDK components to render the correct surface in context.
+
+---
+
+## Why This Matters For Plasma
+
+Plasma is purpose-built for stablecoin payments.  
+Plasma Mobile SDK makes that usable in real merchant apps by combining:
+
+- payment-ready APIs
+- reusable mobile UI components
+- modular internals (`core`, `wallet`, `payment`, `bridge`, `ui`, `genui`)
+
+This creates a faster path from blockchain infrastructure to real user-facing payment products.

@@ -1,10 +1,16 @@
 # Plasma Mobile SDK
 
-## Demo
 
-![Plasma Mobile SDK Demo](document/UI/plasma_mobile_sdk_demo.gif)
 
-`[Replace with your latest demo GIF path if different]`
+  <img
+    src="https://github.com/user-attachments/assets/5e620e42-4f8b-4b20-b611-5dc07189d4f7"
+    alt="Demo"
+    width="280"
+  />
+  <br/>
+  <sub>Plasma SDK – wallet & payment flow demo</sub>
+
+
 
 ---
 

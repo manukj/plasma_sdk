@@ -1,14 +1,6 @@
 # Plasma Mobile SDK
 
-
-
-  <img
-    src="https://github.com/user-attachments/assets/5e620e42-4f8b-4b20-b611-5dc07189d4f7"
-    alt="Demo"
-    width="280"
-  />
-  <br/>
-  <sub>Plasma SDK – wallet & payment flow demo</sub>
+<img width="128" height="128" alt="image" src="https://github.com/user-attachments/assets/1f400347-31ba-4e62-ac2f-5cff09f47d6d" />
 
 
 

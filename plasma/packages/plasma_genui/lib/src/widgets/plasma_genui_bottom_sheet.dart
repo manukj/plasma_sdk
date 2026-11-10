@@ -1,6 +1,6 @@
+import 'package:a2ui_flutter/a2ui_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:genui/genui.dart';
 import 'package:plasma_ui/plasma_ui.dart';
 
 import '../cubit/genui_cubit.dart';
@@ -96,11 +96,17 @@ class _PlasmaGenUiBottomSheetState extends State<PlasmaGenUiBottomSheet> {
                       if (item.isMessage && item.message != null) {
                         return ChatMessageBubble(message: item.message!);
                       }
+                      final surface = context
+                          .read<GenUiCubit>()
+                          .processor
+                          .model
+                          .getSurface(item.surfaceId!);
+                      if (surface == null) return const SizedBox.shrink();
                       return Padding(
                         padding: const EdgeInsets.symmetric(vertical: 8),
-                        child: GenUiSurface(
-                          host: context.read<GenUiCubit>().host,
-                          surfaceId: item.surfaceId!,
+                        child: A2uiSurface(
+                          key: ObjectKey(surface),
+                          surface: surface,
                         ),
                       );
                     }

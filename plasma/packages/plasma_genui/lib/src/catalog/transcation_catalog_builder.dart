@@ -1,12 +1,18 @@
+import 'package:a2ui_core/a2ui_core.dart';
+import 'package:a2ui_flutter/a2ui_flutter.dart';
 import 'package:flutter/material.dart';
-import 'package:genui/genui.dart';
-import 'package:json_schema_builder/json_schema_builder.dart';
+import 'package:json_schema_builder/json_schema_builder.dart'
+    hide ValidationResult;
 import 'package:plasma/plasma.dart';
 
 class TranscationHistoryCatalogBuilder {
-  static Widget catalogBuilder(CatalogItemContext itemContext) {
-    final data = itemContext.data as Map<String, dynamic>;
-    final rawNumber = data['number'];
+  static Widget catalogBuilder(
+    BuildContext context,
+    ComponentNode<ComponentImplementation> node,
+    ComponentProps props,
+    ChildWidgetBuilder buildChild,
+  ) {
+    final rawNumber = props.value('number');
     int number = 10;
 
     if (rawNumber is int) {

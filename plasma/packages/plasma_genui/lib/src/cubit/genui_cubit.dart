@@ -1,63 +1,33 @@
 import 'dart:async';
 
+import 'package:a2ui_core/a2ui_core.dart';
+import 'package:a2ui_flutter/a2ui_flutter.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:genui/genui.dart';
 
 import '../models/chat_feed_item.dart';
 import '../models/chat_message.dart';
+import '../providers/content_generator.dart';
 import 'genui_state.dart';
 
 class GenUiCubit extends Cubit<GenUiState> {
   final ContentGenerator _generator;
-  final A2uiMessageProcessor _processor;
-  late final GenUiConversation _conversation;
+  final MessageProcessor<ComponentImplementation> _processor;
 
-  StreamSubscription<A2uiMessage>? _a2uiSubscription;
+  StreamSubscription<AgentToRendererMessage>? _a2uiSubscription;
   StreamSubscription<String>? _textSubscription;
   StreamSubscription<ContentGeneratorError>? _errorSubscription;
+  final List<Subscription> _surfaceSubscriptions = [];
 
   final List<PlasmaFeedItem> _items = [];
 
   GenUiCubit({
     required ContentGenerator generator,
-    required A2uiMessageProcessor processor,
+    required MessageProcessor<ComponentImplementation> processor,
   })  : _generator = generator,
         _processor = processor,
         super(const GenUiInitial()) {
-    _initializeConversation();
     _setupListeners();
-  }
-
-  void _initializeConversation() {
-    _conversation = GenUiConversation(
-      a2uiMessageProcessor: _processor,
-      contentGenerator: _generator,
-      onSurfaceAdded: (update) {
-        debugPrint(
-            '🔷 GenUiCubit: onSurfaceAdded called - ${update.surfaceId}');
-        if (!_hasSurface(update.surfaceId)) {
-          _items.add(PlasmaFeedItem.surface(update.surfaceId));
-        }
-        emit(GenUiSurfaceAdded(items: List.from(_items)));
-      },
-      onSurfaceUpdated: (update) {
-        debugPrint(
-            '🔹 GenUiCubit: onSurfaceUpdated called - ${update.surfaceId}');
-        if (!_hasSurface(update.surfaceId)) {
-          _items.add(PlasmaFeedItem.surface(update.surfaceId));
-        }
-        emit(GenUiSurfaceAdded(items: List.from(_items)));
-      },
-      onSurfaceDeleted: (update) {
-        debugPrint(
-            '🔶 GenUiCubit: onSurfaceDeleted called - ${update.surfaceId}');
-        _items.removeWhere(
-          (item) => item.isSurface && item.surfaceId == update.surfaceId,
-        );
-        emit(GenUiMessageReceived(items: List.from(_items)));
-      },
-    );
   }
 
   bool _hasSurface(String surfaceId) {
@@ -65,12 +35,32 @@ class GenUiCubit extends Cubit<GenUiState> {
   }
 
   void _setupListeners() {
+    _surfaceSubscriptions.addAll([
+      _processor.model.onSurfaceCreated.subscribe((surface) {
+        debugPrint('🔷 GenUiCubit: onSurfaceCreated called - ${surface.id}');
+        if (!_hasSurface(surface.id)) {
+          _items.add(PlasmaFeedItem.surface(surface.id));
+        }
+        emit(GenUiSurfaceAdded(items: List.from(_items)));
+      }),
+      _processor.model.onSurfaceDeleted.subscribe((surfaceId) {
+        debugPrint('🔶 GenUiCubit: onSurfaceDeleted called - $surfaceId');
+        _items.removeWhere(
+          (item) => item.isSurface && item.surfaceId == surfaceId,
+        );
+        emit(GenUiMessageReceived(items: List.from(_items)));
+      }),
+      _processor.model.onError.subscribe((error) {
+        debugPrint(
+          '🔍 GenUiCubit: Renderer error ${error.code}: ${error.message}',
+        );
+      }),
+    ]);
+
     _a2uiSubscription = _generator.a2uiMessageStream.listen((message) {
       debugPrint(
-          '🔍 GenUiCubit: Received raw A2UI message of type ${message.runtimeType}');
-      if (message is SurfaceUpdate) {
-        debugPrint('🔍 GenUiCubit: Raw SurfaceUpdate for ${message.surfaceId}');
-      }
+          '🔍 GenUiCubit: Received A2UI message of type ${message.runtimeType}');
+      _processor.processMessages(AgentToRendererMessagePayload.of(message));
     });
 
     _textSubscription = _generator.textResponseStream.listen((text) {
@@ -110,18 +100,22 @@ class GenUiCubit extends Cubit<GenUiState> {
 
     emit(GenUiLoading(items: List.from(_items)));
 
-    _conversation.sendRequest(UserUiInteractionMessage.text(text));
+    _generator.sendRequest(text);
   }
 
-  GenUiHost get host => _conversation.host;
+  /// The processor that holds the surfaces of the feed.
+  MessageProcessor<ComponentImplementation> get processor => _processor;
 
   @override
   Future<void> close() {
     _a2uiSubscription?.cancel();
     _textSubscription?.cancel();
     _errorSubscription?.cancel();
-    // GenUiConversation.dispose() already disposes contentGenerator and processor.
-    _conversation.dispose();
+    for (final subscription in _surfaceSubscriptions) {
+      subscription.unsubscribe();
+    }
+    _generator.dispose();
+    _processor.dispose();
     return super.close();
   }
 }

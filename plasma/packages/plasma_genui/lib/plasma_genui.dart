@@ -1,12 +1,14 @@
+import 'package:a2ui_core/a2ui_core.dart';
+import 'package:a2ui_flutter/a2ui_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:genui/genui.dart';
-import 'package:genui_firebase_ai/genui_firebase_ai.dart';
 import 'package:flutter/foundation.dart';
 
 import 'src/catalog/plasma_catalog.dart';
 import 'src/config/genui_config.dart';
 import 'src/cubit/genui_cubit.dart';
+import 'src/providers/content_generator.dart';
+import 'src/providers/firebase_ai_content_generator.dart';
 import 'src/providers/mock_content_generator.dart';
 import 'src/widgets/plasma_genui_bottom_sheet.dart';
 import 'src/widgets/plasma_genui_trigger.dart';
@@ -14,6 +16,7 @@ import 'src/widgets/plasma_genui_trigger.dart';
 export 'src/cubit/genui_cubit.dart';
 export 'src/cubit/genui_state.dart';
 export 'src/models/chat_message.dart';
+export 'src/providers/content_generator.dart';
 export 'src/widgets/chat_input_field.dart';
 export 'src/widgets/chat_message_bubble.dart';
 export 'src/widgets/plasma_genui_bottom_sheet.dart';
@@ -29,7 +32,9 @@ class PlasmaGenUi extends StatelessWidget {
 
   final ContentGeneratorType contentGeneratorType;
 
-  Future<ContentGenerator> _createGenerator(Catalog catalog) async {
+  Future<ContentGenerator> _createGenerator(
+    CatalogImplementation catalog,
+  ) async {
     if (contentGeneratorType == ContentGeneratorType.mock) {
       return MockContentGenerator();
     }
@@ -67,7 +72,13 @@ class PlasmaGenUi extends StatelessWidget {
 
   Future<void> _openChat(BuildContext context) async {
     final catalog = createPlasmaCatalog();
-    final processor = A2uiMessageProcessor(catalogs: [catalog]);
+    final processor = MessageProcessor<ComponentImplementation>(
+      catalogs: [catalog],
+      // A surface streams in over several messages, which the strict checks
+      // would reject.
+      validationConfig: ValidationConfig.relaxed,
+      reportErrorsOnly: true,
+    );
     final generator = await _createGenerator(catalog);
 
     if (!context.mounted) {

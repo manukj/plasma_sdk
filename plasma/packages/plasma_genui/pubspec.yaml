@@ -11,9 +11,10 @@ dependencies:
   flutter:
     sdk: flutter
   
-  # GenUI SDK
-  genui: 0.6.1
-  genui_firebase_ai: ^0.6.1
+  # A2UI SDK
+  a2ui_agent: ^0.2.0
+  a2ui_core: ^0.6.0
+  a2ui_flutter: ^0.2.0
 
   # Firebase support for GenUI content generation
   firebase_core: ^4.1.0

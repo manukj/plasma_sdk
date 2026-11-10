@@ -1,21 +1,26 @@
 import 'dart:async';
 
+import 'package:a2ui_core/a2ui_core.dart';
 import 'package:flutter/foundation.dart';
-import 'package:genui/genui.dart';
 
 import '../catalog/plasma_catalog.dart';
+import 'content_generator.dart';
 
 class MockContentGenerator implements ContentGenerator {
-  final StreamController<A2uiMessage> _a2uiController =
+  static final String _version = A2uiProtocolVersion.v0_9.jsonValue;
+
+  final StreamController<AgentToRendererMessage> _a2uiController =
       StreamController.broadcast();
   final StreamController<String> _textController = StreamController.broadcast();
   final StreamController<ContentGeneratorError> _errorController =
       StreamController.broadcast();
   final ValueNotifier<bool> _isProcessing = ValueNotifier(false);
+  final Set<String> _createdSurfaceIds = {};
   bool _disposed = false;
 
   @override
-  Stream<A2uiMessage> get a2uiMessageStream => _a2uiController.stream;
+  Stream<AgentToRendererMessage> get a2uiMessageStream =>
+      _a2uiController.stream;
 
   @override
   Stream<String> get textResponseStream => _textController.stream;
@@ -27,20 +32,12 @@ class MockContentGenerator implements ContentGenerator {
   ValueListenable<bool> get isProcessing => _isProcessing;
 
   @override
-  Future<void> sendRequest(
-    ChatMessage message, {
-    Iterable<ChatMessage>? history,
-    A2UiClientCapabilities? clientCapabilities,
-  }) async {
+  Future<void> sendRequest(String text) async {
     if (_disposed) return;
     _isProcessing.value = true;
 
-    String userInput = '';
-    String userInputRaw = '';
-    if (message is UserUiInteractionMessage) {
-      userInputRaw = message.text;
-      userInput = userInputRaw.toLowerCase();
-    }
+    final String userInputRaw = text;
+    final String userInput = userInputRaw.toLowerCase();
 
     await Future.delayed(const Duration(seconds: 1));
 
@@ -63,74 +60,21 @@ class MockContentGenerator implements ContentGenerator {
 
         await Future.delayed(const Duration(milliseconds: 200));
 
-        const surfaceId = 'payment_surface';
-        const rootComponentId = 'payment_view';
         final paymentProps = <String, Object?>{};
         if (toAddress != null) paymentProps['toAddress'] = toAddress;
         if (amount != null) paymentProps['amount'] = amount;
 
-        final surfaceUpdate = SurfaceUpdate(
-          surfaceId: surfaceId,
-          components: [
-            Component(
-              id: rootComponentId,
-              componentProperties: {
-                'PaymentView': paymentProps,
-              },
-            ),
-          ],
-        );
-
-        debugPrint(
-          '🎨 MockContentGenerator: Sending SurfaceUpdate - ${surfaceUpdate.surfaceId}',
-        );
-        _a2uiController.add(surfaceUpdate);
-
-        final beginRendering = const BeginRendering(
-          surfaceId: surfaceId,
-          root: rootComponentId,
-          catalogId: plasmaCatalogId,
-        );
-        debugPrint(
-          '🎨 MockContentGenerator: Sending BeginRendering - ${beginRendering.surfaceId}',
-        );
-        _a2uiController.add(beginRendering);
+        _showSurface('payment_surface', 'PaymentView', paymentProps);
       } else if (_isTransactionIntent(userInput)) {
         final number = _extractTransactionCount(userInput);
         _textController.add('Showing your last $number transactions.');
 
         await Future.delayed(const Duration(milliseconds: 200));
 
-        const surfaceId = 'transaction_history_surface';
-        const rootComponentId = 'transaction_history';
-        final surfaceUpdate = SurfaceUpdate(
-          surfaceId: surfaceId,
-          components: [
-            Component(
-              id: rootComponentId,
-              componentProperties: {
-                'PlasmaTranscationHistory': <String, Object?>{
-                  'number': number,
-                },
-              },
-            ),
-          ],
-        );
-
-        debugPrint(
-          '🎨 MockContentGenerator: Sending SurfaceUpdate - ${surfaceUpdate.surfaceId}',
-        );
-        _a2uiController.add(surfaceUpdate);
-
-        final beginRendering = const BeginRendering(
-          surfaceId: surfaceId,
-          root: rootComponentId,
-          catalogId: plasmaCatalogId,
-        );
-        debugPrint(
-          '🎨 MockContentGenerator: Sending BeginRendering - ${beginRendering.surfaceId}',
-        );
-        _a2uiController.add(beginRendering);
+        _showSurface(
+            'transaction_history_surface', 'PlasmaTranscationHistory', {
+          'number': number,
+        });
       } else if (userInput.contains('balance') ||
           userInput.contains('how much') ||
           userInput.contains('funds') ||
@@ -139,33 +83,7 @@ class MockContentGenerator implements ContentGenerator {
 
         await Future.delayed(const Duration(milliseconds: 200));
 
-        const surfaceId = 'balance_surface';
-        const rootComponentId = 'wallet_card';
-        final surfaceUpdate = SurfaceUpdate(
-          surfaceId: surfaceId,
-          components: [
-            Component(
-              id: rootComponentId,
-              componentProperties: const {
-                'PlasmaWalletCard': <String, Object?>{},
-              },
-            ),
-          ],
-        );
-
-        debugPrint(
-            '🎨 MockContentGenerator: Sending SurfaceUpdate - ${surfaceUpdate.surfaceId}');
-        _a2uiController.add(surfaceUpdate);
-
-        final beginRendering = const BeginRendering(
-          surfaceId: surfaceId,
-          root: rootComponentId,
-          catalogId: plasmaCatalogId,
-        );
-        debugPrint(
-          '🎨 MockContentGenerator: Sending BeginRendering - ${beginRendering.surfaceId}',
-        );
-        _a2uiController.add(beginRendering);
+        _showSurface('balance_surface', 'PlasmaWalletCard', const {});
       } else {
         _textController.add(
           'I can show wallet, transaction history, or payment view. Try "What\'s my balance?", "Show me last 4 transactions", or "Send 1 USDT to 0x...".',
@@ -190,6 +108,35 @@ class MockContentGenerator implements ContentGenerator {
     _textController.close();
     _errorController.close();
     _isProcessing.dispose();
+  }
+
+  /// Shows a surface whose root is a [component] with [properties].
+  ///
+  /// A surface shown before is updated in place, as genui did for a second
+  /// beginRendering.
+  void _showSurface(
+    String surfaceId,
+    String component,
+    Map<String, Object?> properties,
+  ) {
+    if (_createdSurfaceIds.add(surfaceId)) {
+      debugPrint('🎨 MockContentGenerator: Sending createSurface - $surfaceId');
+      _a2uiController.add(CreateSurfaceMessage(
+        version: _version,
+        surfaceId: surfaceId,
+        catalogId: plasmaCatalogId,
+      ));
+    }
+    debugPrint(
+      '🎨 MockContentGenerator: Sending updateComponents - $surfaceId',
+    );
+    _a2uiController.add(UpdateComponentsMessage(
+      version: _version,
+      surfaceId: surfaceId,
+      components: [
+        {'id': 'root', 'component': component, ...properties},
+      ],
+    ));
   }
 
   bool _isTransactionIntent(String input) {

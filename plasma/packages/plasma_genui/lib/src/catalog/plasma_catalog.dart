@@ -1,4 +1,4 @@
-import 'package:genui/genui.dart';
+import 'package:a2ui_flutter/a2ui_flutter.dart';
 import 'package:json_schema_builder/json_schema_builder.dart';
 import 'package:plasma/plasma.dart';
 import 'package:plasma_genui/src/catalog/payment_catalog_builder.dart';
@@ -6,27 +6,27 @@ import 'package:plasma_genui/src/catalog/transcation_catalog_builder.dart';
 
 const String plasmaCatalogId = 'plasma:wallet_catalog:v1';
 
-Catalog createPlasmaCatalog() {
-  return Catalog(
-    [
-      CatalogItem(
+CatalogImplementation createPlasmaCatalog() {
+  return CatalogImplementation(
+    id: plasmaCatalogId,
+    components: [
+      ComponentImplementation(
         name: 'PlasmaWalletCard',
-        dataSchema: S.object(),
-        widgetBuilder: (itemContext) {
+        schema: S.object(),
+        builder: (context, node, props, buildChild) {
           return const PlasmaWalletCard();
         },
       ),
-      CatalogItem(
+      ComponentImplementation(
         name: 'PlasmaTranscationHistory',
-        dataSchema: TranscationHistoryCatalogBuilder.catalogDataSchema(),
-        widgetBuilder: TranscationHistoryCatalogBuilder.catalogBuilder,
+        schema: TranscationHistoryCatalogBuilder.catalogDataSchema(),
+        builder: TranscationHistoryCatalogBuilder.catalogBuilder,
       ),
-      CatalogItem(
+      ComponentImplementation(
         name: 'PaymentView',
-        dataSchema: PaymentCatalogBuilder.catalogDataSchema(),
-        widgetBuilder: PaymentCatalogBuilder.catalogBuilder,
+        schema: PaymentCatalogBuilder.catalogDataSchema(),
+        builder: PaymentCatalogBuilder.catalogBuilder,
       ),
     ],
-    catalogId: plasmaCatalogId,
   );
 }

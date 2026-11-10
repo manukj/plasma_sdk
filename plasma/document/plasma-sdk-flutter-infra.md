@@ -102,7 +102,7 @@ plasma_payment
 
 ```text
 plasma_genui
-|_ depends on genui + generator implementations
+|_ depends on a2ui_core + a2ui_flutter (rendering) and a2ui_agent + firebase_ai (Firebase generator)
 |_ depends on plasma widgets/catalog items
 |_ consumes state and widgets from root SDK package
 ```
@@ -162,11 +162,12 @@ UI (PlasmaTranscationHistory)
 ```text
 User taps PlasmaGenUi trigger
 |_ create catalog + choose generator type (mock/firebase)
-|_ create GenUiCubit
+|_ create GenUiCubit (with an A2UI MessageProcessor)
 |_ sendMessage(userText)
-   |_ GenUiConversation -> ContentGenerator
+   |_ ContentGenerator.sendRequest(userText)
    |_ textResponseStream => PlasmaFeedItem.message
-   |_ SurfaceUpdate events => PlasmaFeedItem.surface
+   |_ a2uiMessageStream => MessageProcessor.processMessages
+   |_ onSurfaceCreated => PlasmaFeedItem.surface
 |_ PlasmaGenUiBottomSheet renders feed items in arrival order
 ```
 
